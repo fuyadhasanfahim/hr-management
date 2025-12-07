@@ -1,0 +1,130 @@
+import { model, Schema } from 'mongoose';
+import type IStaff from '../types/staff.type.js';
+
+const StaffSchema = new Schema<IStaff>(
+    {
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: false,
+            unique: true,
+            sparse: true,
+            index: true,
+        },
+
+        staffId: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true,
+        },
+
+        branch: {
+            type: String,
+            required: true,
+            index: true,
+        },
+
+        department: {
+            type: String,
+            enum: [
+                'Graphic Design',
+                'Web Design & Development',
+                'Photo Editing',
+                'Marketing',
+                'Video Editing',
+                'Management',
+            ],
+            index: true,
+        },
+
+        designation: {
+            type: String,
+            required: true,
+            index: true,
+        },
+
+        joinDate: {
+            type: Date,
+            required: true,
+            index: true,
+        },
+
+        status: {
+            type: String,
+            enum: ['active', 'inactive', 'terminated'],
+            default: 'active',
+            index: true,
+        },
+
+        dateOfBirth: {
+            type: Date,
+            required: false,
+        },
+
+        nationalId: {
+            type: String,
+            unique: true,
+            sparse: true,
+            index: true,
+            required: false,
+        },
+
+        bloodGroup: {
+            type: String,
+            enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+            required: false,
+        },
+
+        address: {
+            type: String,
+            required: false,
+        },
+
+        emergencyContact: {
+            name: {
+                type: String,
+                required: false,
+            },
+            relation: {
+                type: String,
+                required: false,
+            },
+            phone: {
+                type: String,
+                required: false,
+            },
+        },
+
+        fathersName: {
+            type: String,
+            required: false,
+        },
+
+        mothersName: {
+            type: String,
+            required: false,
+        },
+
+        spouseName: {
+            type: String,
+            required: false,
+        },
+
+        exitDate: {
+            type: Date,
+        },
+
+        profileCompleted: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+const StaffModel = model<IStaff>('Staff', StaffSchema);
+export default StaffModel;
