@@ -2,8 +2,8 @@ import { Role } from '@/consonants/role';
 import {
     IconLayoutDashboard,
     IconArrowsShuffle,
-    IconBell,
     IconCalendarOff,
+    IconNotes,
 } from '@tabler/icons-react';
 
 export const data = [
@@ -20,7 +20,7 @@ export const data = [
         ],
     },
     {
-        title: 'Shifting Schedule',
+        title: 'Shifting',
         url: '/shifting',
         icon: IconArrowsShuffle,
         access: [
@@ -33,7 +33,7 @@ export const data = [
     {
         title: 'Notices & Announcements',
         url: '/notices',
-        icon: IconBell,
+        icon: IconNotes,
         access: [
             Role.SUPER_ADMIN,
             Role.ADMIN,

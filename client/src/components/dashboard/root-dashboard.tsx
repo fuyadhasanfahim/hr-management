@@ -3,7 +3,7 @@
 import { useSession } from '@/lib/auth-client';
 import { Spinner } from '../ui/spinner';
 import { Role } from '@/consonants/role';
-import EmployeeDashboard from './employee-dashboard';
+import StaffDashboard from './staff-dashboard';
 
 export default function RootDashboard() {
     const { data: session, isPending, isRefetching } = useSession();
@@ -19,7 +19,7 @@ export default function RootDashboard() {
     }
 
     if (session?.user.role === Role.EMPLOYEE) {
-        return <EmployeeDashboard user={session.user} />;
+        return <StaffDashboard user={session.user} />;
     }
 
     return <div>RootDashboard</div>;

@@ -10,12 +10,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    useSidebar,
-} from '@/components/ui/sidebar';
 import { signOut, updateUser, useSession } from '@/lib/auth-client';
 import {
     EllipsisVertical,
@@ -32,9 +26,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { IconMoonStars, IconSun } from '@tabler/icons-react';
+import { Button } from '../ui/button';
 
 export function NavUser() {
-    const { isMobile } = useSidebar();
     const { theme, setTheme, systemTheme } = useTheme();
     const { data, isPending, isRefetching } = useSession();
     const [signingOut, setSigningOut] = useState(false);
@@ -83,134 +77,127 @@ export function NavUser() {
     };
 
     return (
-        <SidebarMenu>
-            <SidebarMenuItem>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <SidebarMenuButton
-                            size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                        >
-                            <Avatar className="h-8 w-8 rounded-full">
-                                <AvatarImage
-                                    src={data?.user.image || undefined}
-                                    alt={data?.user.name}
-                                />
-                                <AvatarFallback className="rounded-lg">
-                                    {isLoading ? (
-                                        <Skeleton className="h-full w-full" />
-                                    ) : (
-                                        data?.user.name?.charAt(0) ?? (
-                                            <UserIcon className="size-4" />
-                                        )
-                                    )}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div
-                                className={cn(
-                                    'grid flex-1 text-left text-sm leading-tight',
-                                    isLoading && 'gap-1'
-                                )}
-                            >
-                                <span className="truncate font-medium">
-                                    {isLoading ? (
-                                        <Skeleton className="h-[16px] w-52" />
-                                    ) : (
-                                        data?.user.name
-                                    )}
-                                </span>
-                                <span className="text-muted-foreground truncate text-xs">
-                                    {isLoading ? (
-                                        <Skeleton className="h-[12px] w-52" />
-                                    ) : (
-                                        data?.user.email
-                                    )}
-                                </span>
-                            </div>
-                            <EllipsisVertical className="ml-auto size-4" />
-                        </SidebarMenuButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                        side={isMobile ? 'bottom' : 'bottom'}
-                        align="end"
-                        sideOffset={4}
-                    >
-                        <DropdownMenuLabel className="p-0 font-normal">
-                            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="h-8 w-8 rounded-full">
-                                    <AvatarImage
-                                        src={data?.user.image || undefined}
-                                        alt={data?.user.name}
-                                    />
-                                    <AvatarFallback className="rounded-lg">
-                                        {isLoading ? (
-                                            <Skeleton className="h-full w-full" />
-                                        ) : (
-                                            data?.user.name?.charAt(0) ?? (
-                                                <UserIcon className="size-4" />
-                                            )
-                                        )}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div
-                                    className={cn(
-                                        'grid flex-1 text-left text-sm leading-tight',
-                                        isLoading && 'gap-1'
-                                    )}
-                                >
-                                    <span className="truncate font-medium">
-                                        {isLoading ? (
-                                            <Skeleton className="h-[16px] w-52" />
-                                        ) : (
-                                            data?.user.name
-                                        )}
-                                    </span>
-                                    <span className="text-muted-foreground truncate text-xs">
-                                        {isLoading ? (
-                                            <Skeleton className="h-[12px] w-52" />
-                                        ) : (
-                                            data?.user.email
-                                        )}
-                                    </span>
-                                </div>
-                            </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem asChild>
-                                <Link href={'/account'}>
-                                    <UserCircle />
-                                    Account
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleChangeTheme}>
-                                {theme === 'dark' ? (
-                                    <IconMoonStars />
-                                ) : (
-                                    <IconSun />
-                                )}
-                                Toggle Mode
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="bg-red-100 hover:bg-red-200 transition-all duration-200 cursor-pointer dark:hover:bg-destructive dark:bg-transparent ease-in"
-                            onClick={handleSignout}
-                            disabled={signingOut}
-                        >
-                            {signingOut ? (
-                                <Loader className="animate-spin" />
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    size="lg"
+                    variant={'ghost'}
+                    className="outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 px-0!"
+                >
+                    <Avatar className="h-8 w-8 rounded-full">
+                        <AvatarImage
+                            src={data?.user.image || undefined}
+                            alt={data?.user.name}
+                        />
+                        <AvatarFallback className="rounded-lg">
+                            {isLoading ? (
+                                <Skeleton className="h-full w-full" />
                             ) : (
-                                <LogOut className="text-destructive dark:text-white" />
+                                data?.user.name?.charAt(0) ?? (
+                                    <UserIcon className="size-4" />
+                                )
                             )}
-                            <span className="text-destructive dark:text-white">
-                                Log out
+                        </AvatarFallback>
+                    </Avatar>
+                    <div
+                        className={cn(
+                            'grid flex-1 text-left text-sm leading-tight',
+                            isLoading && 'gap-1'
+                        )}
+                    >
+                        <span className="truncate font-medium">
+                            {isLoading ? (
+                                <Skeleton className="h-[16px] w-52" />
+                            ) : (
+                                data?.user.name
+                            )}
+                        </span>
+                        <span className="text-muted-foreground truncate text-xs">
+                            {isLoading ? (
+                                <Skeleton className="h-[12px] w-52" />
+                            ) : (
+                                data?.user.email
+                            )}
+                        </span>
+                    </div>
+                    <EllipsisVertical className="ml-auto size-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+                className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+                side={'bottom'}
+                align="end"
+                sideOffset={4}
+            >
+                <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                        <Avatar className="h-8 w-8 rounded-full">
+                            <AvatarImage
+                                src={data?.user.image || undefined}
+                                alt={data?.user.name}
+                            />
+                            <AvatarFallback className="rounded-lg">
+                                {isLoading ? (
+                                    <Skeleton className="h-full w-full" />
+                                ) : (
+                                    data?.user.name?.charAt(0) ?? (
+                                        <UserIcon className="size-4" />
+                                    )
+                                )}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div
+                            className={cn(
+                                'grid flex-1 text-left text-sm leading-tight',
+                                isLoading && 'gap-1'
+                            )}
+                        >
+                            <span className="truncate font-medium">
+                                {isLoading ? (
+                                    <Skeleton className="h-[16px] w-52" />
+                                ) : (
+                                    data?.user.name
+                                )}
                             </span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </SidebarMenuItem>
-        </SidebarMenu>
+                            <span className="text-muted-foreground truncate text-xs">
+                                {isLoading ? (
+                                    <Skeleton className="h-[12px] w-52" />
+                                ) : (
+                                    data?.user.email
+                                )}
+                            </span>
+                        </div>
+                    </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                        <Link href={'/account'}>
+                            <UserCircle />
+                            Account
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleChangeTheme}>
+                        {theme !== 'dark' ? <IconMoonStars /> : <IconSun />}
+                        Toggle Mode ({theme !== 'dark' ? 'Light' : 'Dark'})
+                    </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                    className="bg-red-100 hover:bg-red-200 transition-all duration-200 cursor-pointer dark:hover:bg-destructive dark:bg-transparent ease-in"
+                    onClick={handleSignout}
+                    disabled={signingOut}
+                >
+                    {signingOut ? (
+                        <Loader className="animate-spin" />
+                    ) : (
+                        <LogOut className="text-destructive dark:text-white" />
+                    )}
+                    <span className="text-destructive dark:text-white">
+                        Log out
+                    </span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

@@ -20,6 +20,7 @@ import { useEffect } from 'react';
 import {
     useGetMeQuery,
     useCompleteProfileMutation,
+    useUpdateProfileMutation,
 } from '@/redux/features/staff/staffApi';
 import { ProfileFormValues, profileSchema } from '@/validators/profile.schema';
 import { DatePicker } from '../shared/DatePicker';
@@ -30,6 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../ui/select';
+import { cn } from '@/lib/utils';
 
 export default function EditProfile() {
     const { data: session, isPending, isRefetching } = useSession();
@@ -44,6 +46,7 @@ export default function EditProfile() {
         }
     );
     const [completeProfile] = useCompleteProfileMutation();
+    const [updateProfile] = useUpdateProfileMutation();
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -141,7 +144,9 @@ export default function EditProfile() {
                 joinDate: values.joinDate.toISOString(),
             };
 
-            await completeProfile(staffPayload).unwrap();
+            data.staff.profileCompleted
+                ? await updateProfile(staffPayload).unwrap()
+                : await completeProfile(staffPayload).unwrap();
 
             if (nameChanged && emailChanged) {
                 toast.success(
@@ -352,7 +357,7 @@ export default function EditProfile() {
                 </CardContent>
 
                 <CardFooter>
-                    <Button className="w-full" disabled={isLoading}>
+                    <Button className={cn('w-full')} disabled={isLoading}>
                         {isLoading ? (
                             <Loader className="animate-spin" />
                         ) : (

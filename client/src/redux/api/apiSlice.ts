@@ -6,7 +6,7 @@ export const apiSlice = createApi({
         baseUrl: `${process.env.NEXT_PUBLIC_APP_URL!}/api`,
         credentials: 'include',
     }),
-    tagTypes: ['staff', "user"],
+    tagTypes: ['Staff', 'User', 'Shift', 'Branch'],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     endpoints: (_builder) => ({}),
 });

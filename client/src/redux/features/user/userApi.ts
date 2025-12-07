@@ -9,7 +9,7 @@ export const userApi = apiSlice.injectEndpoints({
                     method: 'POST',
                     body: formData,
                 }),
-                invalidatesTags: ['user'],
+                invalidatesTags: ['User'],
             }),
         };
     },

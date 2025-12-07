@@ -7,7 +7,7 @@ export const staffApi = apiSlice.injectEndpoints({
                 url: '/staffs/me',
                 method: 'GET',
             }),
-            providesTags: ['staff'],
+            providesTags: ['Staff'],
         }),
         createStaff: builder.mutation({
             query: (body) => ({
@@ -18,7 +18,7 @@ export const staffApi = apiSlice.injectEndpoints({
                     'Content-Type': 'application/json',
                 },
             }),
-            invalidatesTags: ['staff'],
+            invalidatesTags: ['Staff'],
         }),
         completeProfile: builder.mutation({
             query: (body) => ({
@@ -29,7 +29,7 @@ export const staffApi = apiSlice.injectEndpoints({
                     'Content-Type': 'application/json',
                 },
             }),
-            invalidatesTags: ['staff'],
+            invalidatesTags: ['Staff'],
         }),
         updateProfile: builder.mutation({
             query: (body) => ({
@@ -40,7 +40,7 @@ export const staffApi = apiSlice.injectEndpoints({
                     'Content-Type': 'application/json',
                 },
             }),
-            invalidatesTags: ['staff'],
+            invalidatesTags: ['Staff'],
         }),
     }),
 });

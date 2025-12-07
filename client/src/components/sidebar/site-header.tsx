@@ -24,7 +24,7 @@ export function SiteHeader() {
                     <Notification />
                     <Separator
                         orientation="vertical"
-                        className="mx-2 data-[orientation=vertical]:h-4"
+                        className="mx-3 data-[orientation=vertical]:h-4"
                     />
                     <NavUser />
                 </div>

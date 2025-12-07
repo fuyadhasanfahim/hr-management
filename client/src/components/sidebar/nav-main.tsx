@@ -43,8 +43,8 @@ export function NavMain() {
 
     return (
         <SidebarGroup>
-            <SidebarGroupContent className="flex flex-col gap-2">
-                <SidebarMenu>
+            <SidebarGroupContent>
+                <SidebarMenu className="space-y-2">
                     {filteredData.map((item) => (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
@@ -52,7 +52,7 @@ export function NavMain() {
                                 className={cn(
                                     pathname.startsWith(item.url) &&
                                         'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
-                                    ' active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear'
+                                    ''
                                 )}
                                 asChild
                             >
