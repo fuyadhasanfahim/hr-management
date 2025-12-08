@@ -169,6 +169,9 @@ export default function RootAccount() {
                                 <b>Email:</b> {data?.user?.email}
                             </p>
                             <p>
+                                <b>Phone:</b> {staff?.phone}
+                            </p>
+                            <p>
                                 <b>Staff ID:</b> {staff?.staffId}
                             </p>
                             <p>

@@ -5,6 +5,8 @@ export const profileSchema = z.object({
 
     email: z.email('Please enter a valid email address'),
 
+    phone: z.string().min(11, 'Phone number is required'),
+    
     dateOfBirth: z.date('Date of birth is required'),
 
     nationalId: z.string().min(5, 'National ID is required'),

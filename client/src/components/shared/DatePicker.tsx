@@ -38,7 +38,7 @@ export function DatePicker({
     const [open, setOpen] = React.useState(false);
 
     return (
-        <div className={`flex flex-col gap-3 ${className ?? ''}`}>
+        <div className={`flex flex-col gap-2 ${className ?? ''}`}>
             {label && <Label className="px-1">{label}</Label>}
 
             <Popover open={open} onOpenChange={setOpen}>

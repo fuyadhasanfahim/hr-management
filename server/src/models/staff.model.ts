@@ -19,6 +19,13 @@ const StaffSchema = new Schema<IStaff>(
             index: true,
         },
 
+        phone: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true,
+        },
+
         branch: {
             type: String,
             required: true,

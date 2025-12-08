@@ -53,6 +53,7 @@ export default function EditProfile() {
         defaultValues: {
             name: '',
             email: '',
+            phone: '',
             nationalId: '',
             bloodGroup: '',
             address: '',
@@ -75,6 +76,7 @@ export default function EditProfile() {
 
         if (!data || !data.staff.profileCompleted) return;
 
+        form.setValue('phone', data.staff.phone as string);
         form.setValue('dateOfBirth', data.staff.dateOfBirth);
         form.setValue('bloodGroup', data.staff.bloodGroup);
         form.setValue('nationalId', data.staff.nationalId);
@@ -199,61 +201,77 @@ export default function EditProfile() {
                             </div>
                         </div>
 
-                        <DatePicker
-                            label="Date of Birth *"
-                            value={form.watch('dateOfBirth')}
-                            onChange={(date) => {
-                                if (date) {
-                                    form.setValue('dateOfBirth', date);
-                                }
-                            }}
-                            placeholder="Pick date of birth"
-                            maxDate={new Date()}
-                            className=""
-                        />
-                        <p className="text-sm text-destructive">
-                            {form.formState.errors.dateOfBirth?.message}
-                        </p>
+                        <div className="grid gap-4 grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label>Phone *</Label>
+                                <Input
+                                    {...form.register('phone')}
+                                    placeholder="Enter phone number"
+                                />
+                                <p className="text-sm text-destructive">
+                                    {form.formState.errors.phone?.message}
+                                </p>
+                            </div>
 
-                        <div className="grid gap-2">
-                            <Label>National ID *</Label>
-                            <Input {...form.register('nationalId')} />
-                            <p className="text-sm text-destructive">
-                                {form.formState.errors.nationalId?.message}
-                            </p>
+                            <div>
+                                <DatePicker
+                                    label="Date of Birth *"
+                                    value={form.watch('dateOfBirth')}
+                                    onChange={(date) => {
+                                        if (date) {
+                                            form.setValue('dateOfBirth', date);
+                                        }
+                                    }}
+                                    placeholder="Pick date of birth"
+                                    maxDate={new Date()}
+                                />
+                                <p className="text-sm text-destructive">
+                                    {form.formState.errors.dateOfBirth?.message}
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label>Blood Group *</Label>
-                            <Select
-                                value={form.watch('bloodGroup')}
-                                onValueChange={(v) =>
-                                    form.setValue('bloodGroup', v)
-                                }
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select blood group" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {[
-                                        'A+',
-                                        'A-',
-                                        'B+',
-                                        'B-',
-                                        'AB+',
-                                        'AB-',
-                                        'O+',
-                                        'O-',
-                                    ].map((bg) => (
-                                        <SelectItem key={bg} value={bg}>
-                                            {bg}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-sm text-destructive">
-                                {form.formState.errors.bloodGroup?.message}
-                            </p>
+                        <div className="grid gap-4 grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label>National ID *</Label>
+                                <Input {...form.register('nationalId')} />
+                                <p className="text-sm text-destructive">
+                                    {form.formState.errors.nationalId?.message}
+                                </p>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label>Blood Group *</Label>
+                                <Select
+                                    value={form.watch('bloodGroup')}
+                                    onValueChange={(v) =>
+                                        form.setValue('bloodGroup', v)
+                                    }
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select blood group" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {[
+                                            'A+',
+                                            'A-',
+                                            'B+',
+                                            'B-',
+                                            'AB+',
+                                            'AB-',
+                                            'O+',
+                                            'O-',
+                                        ].map((bg) => (
+                                            <SelectItem key={bg} value={bg}>
+                                                {bg}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-sm text-destructive">
+                                    {form.formState.errors.bloodGroup?.message}
+                                </p>
+                            </div>
                         </div>
 
                         <div className="grid gap-2">

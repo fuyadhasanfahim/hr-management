@@ -11,13 +11,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { changePassword } from '@/lib/auth-client';
+import { changePassword, useSession } from '@/lib/auth-client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { Spinner } from '../ui/spinner';
 
 const changePasswordSchema = z.object({
     currentPassword: z.string().nonempty('Current Password is required.'),
@@ -25,6 +26,8 @@ const changePasswordSchema = z.object({
 });
 
 export default function ChangePassword() {
+    const { refetch } = useSession();
+
     const form = useForm({
         resolver: zodResolver(changePasswordSchema),
         defaultValues: {
@@ -40,34 +43,32 @@ export default function ChangePassword() {
 
     const onSubmit = async (data: z.infer<typeof changePasswordSchema>) => {
         try {
-            const res = await changePassword({
+            await changePassword({
                 newPassword: data.newPassword,
                 currentPassword: data.currentPassword,
                 revokeOtherSessions: true,
             });
 
-            if (res.error) {
-                toast.error(res.error.message);
-                return;
-            }
-
             toast.success('Password updated successfully!');
+            refetch();
             form.reset();
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to update password.');
+        } catch (error) {
+            toast.error(
+                (error as Error).message || 'Failed to update password.'
+            );
         }
     };
 
     return (
-        <Card className="col-span-2">
-            <CardHeader>
-                <CardTitle className="text-2xl">Change Password</CardTitle>
-                <CardDescription className="font-serif">
-                    Enter your current password and choose a new password.
-                </CardDescription>
-            </CardHeader>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="col-span-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl">Change Password</CardTitle>
+                    <CardDescription className="">
+                        Enter your current password and choose a new password.
+                    </CardDescription>
+                </CardHeader>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <CardContent className="space-y-6">
                     <div className="grid gap-3">
                         <Label htmlFor="currentPassword">
@@ -85,13 +86,13 @@ export default function ChangePassword() {
                                 type="button"
                                 variant="link"
                                 onClick={() => setShowCurrent(!showCurrent)}
-                                className="font-serif absolute right-2 top-1/2 -translate-y-1/2"
+                                className="absolute right-2 top-1/2 -translate-y-1/2"
                             >
                                 {showCurrent ? 'Hide' : 'Show'}
                             </Button>
                         </div>
                         {form.formState.errors.currentPassword && (
-                            <span className="text-xs text-destructive font-serif">
+                            <span className="text-xs text-destructive">
                                 {form.formState.errors.currentPassword.message}
                             </span>
                         )}
@@ -113,13 +114,13 @@ export default function ChangePassword() {
                                 type="button"
                                 variant="link"
                                 onClick={() => setShowNew(!showNew)}
-                                className="font-serif absolute right-2 top-1/2 -translate-y-1/2"
+                                className="absolute right-2 top-1/2 -translate-y-1/2"
                             >
                                 {showNew ? 'Hide' : 'Show'}
                             </Button>
                         </div>
                         {form.formState.errors.newPassword && (
-                            <span className="text-xs text-destructive font-serif">
+                            <span className="text-xs text-destructive">
                                 {form.formState.errors.newPassword.message}
                             </span>
                         )}
@@ -132,14 +133,10 @@ export default function ChangePassword() {
                         className="w-full"
                         disabled={isLoading}
                     >
-                        {isLoading ? (
-                            <Loader className="animate-spin" />
-                        ) : (
-                            'Update Password'
-                        )}
+                        {isLoading ? <Spinner /> : 'Update Password'}
                     </Button>
                 </CardFooter>
-            </form>
-        </Card>
+            </Card>
+        </form>
     );
 }

@@ -3,7 +3,7 @@
 import { useSession } from '@/lib/auth-client';
 import { Spinner } from '../ui/spinner';
 import { Role } from '@/consonants/role';
-import StaffDashboard from './staff-dashboard';
+import StaffDashboard from './staff-dashboard/staff-dashboard';
 
 export default function RootDashboard() {
     const { data: session, isPending, isRefetching } = useSession();

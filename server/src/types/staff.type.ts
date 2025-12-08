@@ -4,6 +4,8 @@ export default interface IStaff {
     userId: Types.ObjectId;
     staffId: string;
 
+    phone: string;
+
     branch: string;
     department?: string;
     designation: string;
