@@ -10,15 +10,14 @@ export default function RootDashboard() {
 
     const isLoading = isPending || isRefetching;
 
-    if (!session && isLoading) {
-        return (
-            <div className="h-full items-center justify-center flex">
-                <Spinner />
-            </div>
-        );
+    if (isLoading) {
+        return;
     }
 
-    if (session?.user.role === Role.STAFF) {
+    if (
+        session &&
+        [Role.STAFF, Role.TEAM_LEADER].includes(session.user.role as Role)
+    ) {
         return <StaffDashboard user={session.user} />;
     }
 

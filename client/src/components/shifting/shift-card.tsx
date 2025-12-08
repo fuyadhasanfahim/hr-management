@@ -12,7 +12,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 
-import { EllipsisVertical, Pencil } from 'lucide-react';
+import {
+    EllipsisVertical,
+    Pencil,
+    Clock,
+    CalendarDays,
+    Timer,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useUpdateShiftMutation } from '@/redux/features/shift/shiftApi';
@@ -26,11 +32,19 @@ interface ShiftCardProps {
     shift: IShift;
 }
 
+const DAY_MAP: Record<number, string> = {
+    0: 'Sun',
+    1: 'Mon',
+    2: 'Tue',
+    3: 'Wed',
+    4: 'Thu',
+    5: 'Fri',
+    6: 'Sat',
+};
+
 export default function ShiftCard({ shift }: ShiftCardProps) {
     const { data: session, isPending, isRefetching } = useSession();
-
     const [openEdit, setOpenEdit] = useState(false);
-
     const [updateShift, { isLoading: isUpdating }] = useUpdateShiftMutation();
 
     const isLoading = isPending || isRefetching;
@@ -50,16 +64,17 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
 
     return (
         <>
-            <Card className="relative">
+            <Card className="relative transition hover:shadow-lg">
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle className="truncate text-lg font-semibold">
+                        <CardTitle className="text-lg font-semibold">
                             {shift.name}
                         </CardTitle>
 
                         <div className="flex items-center gap-2">
-                            <Badge variant="outline">{shift.code}</Badge>
-
+                            <Badge variant="outline" className="mt-1">
+                                {shift.code}
+                            </Badge>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
@@ -79,7 +94,7 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
                                     <DropdownMenuItem
                                         onClick={() => setOpenEdit(true)}
                                     >
-                                        <Pencil />
+                                        <Pencil className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
 
@@ -90,24 +105,83 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
                     </div>
                 </CardHeader>
 
-                <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                        <span>Start</span>
-                        <span>{shift.startTime}</span>
+                <CardContent className="space-y-4 text-sm">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center gap-2 rounded-md border p-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                                <p className="text-xs text-muted-foreground">
+                                    Start
+                                </p>
+                                <p className="font-medium">{shift.startTime}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 rounded-md border p-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                                <p className="text-xs text-muted-foreground">
+                                    End
+                                </p>
+                                <p className="font-medium">{shift.endTime}</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex justify-between">
-                        <span>End</span>
-                        <span>{shift.endTime}</span>
+                    <div className="rounded-md border p-2 space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <CalendarDays className="h-4 w-4" />
+                            Working Days
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            {shift.workDays?.map((day) => (
+                                <Badge
+                                    key={day}
+                                    variant="secondary"
+                                >
+                                    {DAY_MAP[day]}
+                                </Badge>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="flex justify-between">
-                        <span>OT</span>
-                        <span>{shift.otEnabled ? 'Enabled' : 'Disabled'}</span>
+                    {/* ✅ GRACE / LATE / HALF */}
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-md border p-2 text-center">
+                            <p className="text-xs text-muted-foreground">
+                                Grace
+                            </p>
+                            <p className="font-medium">
+                                {shift.gracePeriodMinutes}m
+                            </p>
+                        </div>
+
+                        <div className="rounded-md border p-2 text-center">
+                            <p className="text-xs text-muted-foreground">
+                                Late After
+                            </p>
+                            <p className="font-medium">
+                                {shift.lateAfterMinutes}m
+                            </p>
+                        </div>
+
+                        <div className="rounded-md border p-2 text-center">
+                            <p className="text-xs text-muted-foreground">
+                                Half Day
+                            </p>
+                            <p className="font-medium">
+                                {shift.halfDayAfterMinutes / 60}h
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <span>Status</span>
+                    {/* ✅ OT + STATUS */}
+                    <div className="flex items-center justify-between rounded-md border p-3">
+                        <div className="flex items-center gap-2">
+                            <Timer className="h-4 w-4 text-muted-foreground" />
+                            <span>OT</span>
+                        </div>
 
                         <div className="flex items-center gap-2">
                             <Badge

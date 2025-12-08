@@ -16,6 +16,7 @@ import { useSession } from '@/lib/auth-client';
 import { format } from 'date-fns';
 import { useGetMeQuery } from '@/redux/features/staff/staffApi';
 import { Skeleton } from '@/components/ui/skeleton';
+import StaffHeaderSkeleton from './staff-header-skeleton';
 
 export default function StaffHeader() {
     const { data: session, isPending, isRefetching } = useSession();
@@ -43,6 +44,10 @@ export default function StaffHeader() {
             : hour < 21
             ? 'Good Evening'
             : 'Good Night';
+
+    if (isLoading) {
+        return <StaffHeaderSkeleton />;
+    }
 
     return (
         <Card>

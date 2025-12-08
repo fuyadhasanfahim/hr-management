@@ -45,7 +45,7 @@ export default function StaffTracking() {
     };
 
     return (
-        <Card className="border-none shadow-lg bg-linear-to-br from-background to-muted/40">
+        <Card>
             <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <CardTitle className="text-xl font-bold">
@@ -59,7 +59,7 @@ export default function StaffTracking() {
 
             <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <Card className="shadow-sm">
+                    <Card>
                         <CardContent className="p-4 flex flex-col gap-1">
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>Check-in</span>
@@ -71,7 +71,7 @@ export default function StaffTracking() {
                         </CardContent>
                     </Card>
 
-                    <Card className="shadow-sm">
+                    <Card>
                         <CardContent className="p-4 flex flex-col gap-1">
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>Check-out</span>
@@ -83,7 +83,7 @@ export default function StaffTracking() {
                         </CardContent>
                     </Card>
 
-                    <Card className="shadow-sm">
+                    <Card>
                         <CardContent className="p-4 flex flex-col gap-1">
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>Worked</span>
@@ -95,7 +95,7 @@ export default function StaffTracking() {
                         </CardContent>
                     </Card>
 
-                    <Card className="shadow-sm">
+                    <Card>
                         <CardContent className="p-4 flex flex-col gap-1">
                             <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>Overtime</span>

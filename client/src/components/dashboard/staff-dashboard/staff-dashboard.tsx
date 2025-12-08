@@ -69,63 +69,6 @@ const mockSalary = {
 };
 
 export default function StaffDashboard({ user }: { user: User }) {
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [isCheckingIn, setIsCheckingIn] = useState(false);
-    const [isStartingOT, setIsStartingOT] = useState(false);
-
-    // Update time every second
-    useState(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    });
-
-    const handleCheckIn = async () => {
-        setIsCheckingIn(true);
-        // Call your API here
-        setTimeout(() => {
-            setIsCheckingIn(false);
-            alert('Checked in successfully!');
-        }, 1000);
-    };
-
-    const handleStartOT = async () => {
-        setIsStartingOT(true);
-        // Call your API here
-        setTimeout(() => {
-            setIsStartingOT(false);
-            alert('OT started successfully!');
-        }, 1000);
-    };
-
-    const handleApplyLeave = () => {
-        // Navigate to leave application page or open modal
-        alert('Navigate to leave application');
-    };
-
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase();
-    };
-
-    const formatTime = (date: Date) => {
-        return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        });
-    };
-
-    const getShift = () => {
-        const hour = currentTime.getHours();
-        if (hour >= 6 && hour < 12) return 'Morning';
-        if (hour >= 12 && hour < 17) return 'Afternoon';
-        if (hour >= 17 && hour < 21) return 'Evening';
-        return 'Night';
-    };
-
     return (
         <div className="min-h-screen bg-background space-y-6">
             <StaffHeader />
