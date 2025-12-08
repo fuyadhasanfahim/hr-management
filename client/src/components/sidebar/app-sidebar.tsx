@@ -20,15 +20,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
-                            className="w-[220px] h-16 mx-auto hover:bg-transparent"
+                            className="w-auto h-auto mx-auto hover:bg-transparent"
                         >
                             <Link href="/">
-                                <figure className="w-auto h-15">
+                                <figure className="w-auto h-auto">
                                     <Image
                                         src="https://res.cloudinary.com/dny7zfbg9/image/upload/v1755954483/mqontecf1xao7znsh6cx.png"
                                         alt="Company logo"
                                         width={200}
                                         height={60}
+                                        loading="eager"
                                     />
                                 </figure>
                             </Link>

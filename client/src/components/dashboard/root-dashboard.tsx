@@ -18,7 +18,7 @@ export default function RootDashboard() {
         );
     }
 
-    if (session?.user.role === Role.EMPLOYEE) {
+    if (session?.user.role === Role.STAFF) {
         return <StaffDashboard user={session.user} />;
     }
 

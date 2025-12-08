@@ -6,7 +6,7 @@ import {
     IconNotes,
 } from '@tabler/icons-react';
 
-export const data = [
+export const sidebarData = [
     {
         title: 'Dashboard',
         url: '/dashboard',
@@ -16,7 +16,7 @@ export const data = [
             Role.ADMIN,
             Role.HR_MANAGER,
             Role.TEAM_LEADER,
-            Role.EMPLOYEE,
+            Role.STAFF,
         ],
     },
     {
@@ -39,7 +39,7 @@ export const data = [
             Role.ADMIN,
             Role.HR_MANAGER,
             Role.TEAM_LEADER,
-            Role.EMPLOYEE,
+            Role.STAFF,
         ],
     },
     {
@@ -51,7 +51,7 @@ export const data = [
             Role.ADMIN,
             Role.HR_MANAGER,
             Role.TEAM_LEADER,
-            Role.EMPLOYEE,
+            Role.STAFF,
         ],
     },
 ];

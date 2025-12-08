@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { data } from './data';
+import { sidebarData } from '@/consonants/sidebar';
 import { useSession } from '@/lib/auth-client';
 import { Skeleton } from '../ui/skeleton';
 import { Role } from '@/consonants/role';
@@ -37,7 +37,7 @@ export function NavMain() {
 
     const userRole = session?.user?.role;
 
-    const filteredData = data.filter((item) =>
+    const filteredData = sidebarData.filter((item) =>
         userRole ? item.access.includes(userRole as Role) : false
     );
 

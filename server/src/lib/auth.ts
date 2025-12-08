@@ -6,23 +6,20 @@ import envConfig from '../config/env.config.js';
 import { Role } from '../consonants/role.js';
 
 const { db_name, better_auth_secret, trusted_origins } = envConfig;
-
 const mongoClient = await client();
 const db = mongoClient.db(db_name);
 
 export const auth = betterAuth({
     secret: better_auth_secret,
-
     database: mongodbAdapter(db, {
         client: mongoClient,
     }),
-
     user: {
         additionalFields: {
             role: {
                 type: 'string',
                 required: false,
-                defaultValue: Role.EMPLOYEE,
+                defaultValue: Role.STAFF,
             },
             theme: {
                 type: 'string',
@@ -30,31 +27,38 @@ export const auth = betterAuth({
                 defaultValue: 'system',
             },
         },
-
         changeEmail: {
             enabled: true,
         },
     },
-
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
     },
-
     emailVerification: {
         sendOnSignUp: true,
-
         async sendVerificationEmail({ url, user }) {
             await sendMail({
                 to: user.email,
                 subject: 'Verify Your Email',
                 body: `<h1>Hello ${user.name || ''}</h1>
-        <p>Please verify your email:</p>
-        <a href="${url}">Verify</a>
-        <p>If you did not create this account, ignore this email.</p>`,
+                <p>Please verify your email:</p>
+                <a href="${url}">Verify</a>
+                <p>If you did not create this account, ignore this email.</p>`,
             });
         },
     },
-
     trustedOrigins: trusted_origins.split(','),
+    session: {
+        expiresIn: 60 * 60 * 10,
+        updateAge: 60 * 60 * 2,
+
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60,
+            strategy: 'compact',
+        },
+
+        freshAge: 60 * 15,
+    },
 });

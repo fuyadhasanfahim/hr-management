@@ -7,9 +7,7 @@ export const authClient = createAuthClient({
         inferAdditionalFields({
             user: {
                 role: { type: 'string' },
-                theme: {
-                    type: 'string',
-                },
+                theme: { type: 'string' },
             },
         }),
     ],
@@ -24,4 +22,5 @@ export const {
     changePassword,
     changeEmail,
     sendVerificationEmail,
+    getSession,
 } = authClient;

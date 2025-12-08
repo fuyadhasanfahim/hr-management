@@ -1,13 +1,13 @@
-import { getSessionCookie } from 'better-auth/cookies';
+import { getSessionCookie, getCookieCache } from 'better-auth/cookies';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { canAccess } from '@/utils/canAccess';
+import { Role } from '@/consonants/role';
 
-const publicRoutes = new Set(['/sign-in', '/sign-up', '/forget-password']);
+const publicRoutes = new Set(['/sign-in', '/forget-password']);
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
-
-    const session = getSessionCookie(request);
 
     if (
         pathname.startsWith('/_next/') ||
@@ -19,12 +19,17 @@ export function proxy(request: NextRequest) {
         return NextResponse.next();
     }
 
-    if (!session) {
-        if (publicRoutes.has(pathname)) {
-            return NextResponse.next();
-        }
+    const cachedSession = await getCookieCache(request);
 
-        return NextResponse.redirect(new URL('/sign-in', request.url));
+    if (!cachedSession) {
+        const sessionToken = getSessionCookie(request);
+
+        if (!sessionToken) {
+            if (publicRoutes.has(pathname)) {
+                return NextResponse.next();
+            }
+            return NextResponse.redirect(new URL('/sign-in', request.url));
+        }
     }
 
     if (publicRoutes.has(pathname)) {
@@ -33,6 +38,22 @@ export function proxy(request: NextRequest) {
 
     if (pathname === '/') {
         return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    if (cachedSession?.user?.role) {
+        const userRole = cachedSession.user.role as Role;
+
+        if (!canAccess(userRole, pathname)) {
+            return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-user-id', cachedSession.user.id);
+        requestHeaders.set('x-user-role', userRole);
+
+        return NextResponse.next({
+            request: { headers: requestHeaders },
+        });
     }
 
     return NextResponse.next();
