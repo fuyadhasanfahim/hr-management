@@ -9,6 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Clock, LogIn, FileText, Timer } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { useCheckInMutation } from '@/redux/features/attendance/attendanceApi';
+import { toast } from 'sonner';
 
 const mockAttendance = {
     today: {
@@ -21,15 +23,29 @@ const mockAttendance = {
 };
 
 export default function StaffTracking() {
-    const [isCheckingIn, setIsCheckingIn] = useState(false);
+    const [checkIn, { isLoading: isCheckingIn }] = useCheckInMutation();
     const [isStartingOT, setIsStartingOT] = useState(false);
 
-    const handleCheckIn = () => {
-        setIsCheckingIn(true);
-        setTimeout(() => {
-            setIsCheckingIn(false);
-            alert('Checked in successfully!');
-        }, 1500);
+    const handleCheckIn = async () => {
+        try {
+            const res = await checkIn({
+                source: 'web',
+            }).unwrap();
+
+            if (!res.success) {
+                toast.error(res.message || 'Failed to check in.');
+                return;
+            }
+
+            toast.success('Checked in successfully!');
+        } catch (error: any) {
+            const apiMessage =
+                error?.data?.message ||
+                error?.error ||
+                'Failed to check in. Please try again.';
+
+            toast.error(apiMessage);
+        }
     };
 
     const handleStartOT = () => {

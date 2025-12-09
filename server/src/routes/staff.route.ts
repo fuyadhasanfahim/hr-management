@@ -5,6 +5,7 @@ import { Role } from '../consonants/role.js';
 
 const router: Router = Router();
 
+router.get('/', StaffController.getStaffs);
 router.get('/me', StaffController.getStaff);
 
 router.post(

@@ -26,8 +26,9 @@ const StaffSchema = new Schema<IStaff>(
             index: true,
         },
 
-        branch: {
-            type: String,
+        branchId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Branch',
             required: true,
             index: true,
         },

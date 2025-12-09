@@ -19,6 +19,14 @@ export const shiftApi = apiSlice.injectEndpoints({
             providesTags: ['Shift'],
         }),
 
+        getMyShift: builder.query({
+            query: () => ({
+                url: '/shifts/my-shift',
+                method: 'GET',
+            }),
+            providesTags: ['Shift'],
+        }),
+
         updateShift: builder.mutation({
             query: ({ id, data }) => ({
                 url: `/shifts/${id}`,
@@ -39,6 +47,7 @@ export const shiftApi = apiSlice.injectEndpoints({
 });
 
 export const {
+    useGetMyShiftQuery,
     useCreateShiftMutation,
     useGetAllShiftsQuery,
     useUpdateShiftMutation,

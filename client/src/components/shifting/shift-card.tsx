@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -67,9 +73,14 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
             <Card className="relative transition hover:shadow-lg">
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg font-semibold">
-                            {shift.name}
-                        </CardTitle>
+                        <div>
+                            <CardTitle className="text-lg font-semibold">
+                                {shift.name}
+                            </CardTitle>
+                            <CardDescription>
+                                {shift.branchId.name}
+                            </CardDescription>
+                        </div>
 
                         <div className="flex items-center gap-2">
                             <Badge variant="outline" className="mt-1">
@@ -107,7 +118,7 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
 
                 <CardContent className="space-y-4 text-sm">
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center gap-2 rounded-md border p-2">
+                        <div className="flex items-center gap-2 rounded-md border p-3">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <div>
                                 <p className="text-xs text-muted-foreground">
@@ -117,7 +128,7 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 rounded-md border p-2">
+                        <div className="flex items-center gap-2 rounded-md border p-3">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <div>
                                 <p className="text-xs text-muted-foreground">
@@ -128,27 +139,21 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
                         </div>
                     </div>
 
-                    <div className="rounded-md border p-2 space-y-2">
+                    <div className="rounded-md border p-3 space-y-3">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <CalendarDays className="h-4 w-4" />
                             Working Days
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap flex-1 items-center gap-2">
                             {shift.workDays?.map((day) => (
-                                <Badge
-                                    key={day}
-                                    variant="secondary"
-                                >
-                                    {DAY_MAP[day]}
-                                </Badge>
+                                <Badge key={day}>{DAY_MAP[day]}</Badge>
                             ))}
                         </div>
                     </div>
 
-                    {/* ✅ GRACE / LATE / HALF */}
                     <div className="grid grid-cols-3 gap-3">
-                        <div className="rounded-md border p-2 text-center">
+                        <div className="rounded-md border p-3 text-center">
                             <p className="text-xs text-muted-foreground">
                                 Grace
                             </p>
@@ -157,7 +162,7 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
                             </p>
                         </div>
 
-                        <div className="rounded-md border p-2 text-center">
+                        <div className="rounded-md border p-3 text-center">
                             <p className="text-xs text-muted-foreground">
                                 Late After
                             </p>
@@ -166,7 +171,7 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
                             </p>
                         </div>
 
-                        <div className="rounded-md border p-2 text-center">
+                        <div className="rounded-md border p-3 text-center">
                             <p className="text-xs text-muted-foreground">
                                 Half Day
                             </p>

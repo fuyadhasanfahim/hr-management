@@ -1,3 +1,5 @@
+import { IBranch } from './branch.type';
+
 export type ShiftWorkDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface IShift {
@@ -6,7 +8,7 @@ export interface IShift {
     name: string;
     code: string;
 
-    branch: string;
+    branchId: IBranch;
 
     timeZone: string;
 

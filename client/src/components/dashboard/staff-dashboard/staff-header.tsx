@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { useGetMeQuery } from '@/redux/features/staff/staffApi';
 import { Skeleton } from '@/components/ui/skeleton';
 import StaffHeaderSkeleton from './staff-header-skeleton';
+import { useGetMyShiftQuery } from '@/redux/features/shift/shiftApi';
 
 export default function StaffHeader() {
     const { data: session, isPending, isRefetching } = useSession();
@@ -25,10 +26,21 @@ export default function StaffHeader() {
         isLoading: isStaffLoading,
         isFetching,
     } = useGetMeQuery({}, { skip: !session });
+    const {
+        data: myShiftData,
+        isLoading: isMyShiftLoading,
+        isFetching: isMyShiftFetching,
+    } = useGetMyShiftQuery({}, { skip: !session });
 
     const [currentTime, setCurrentTime] = useState(new Date());
 
-    const isLoading = isPending || isRefetching || isStaffLoading || isFetching;
+    const isLoading =
+        isPending ||
+        isRefetching ||
+        isStaffLoading ||
+        isFetching ||
+        isMyShiftLoading ||
+        isMyShiftFetching;
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -144,7 +156,10 @@ export default function StaffHeader() {
                         </div>
 
                         <div className="text-sm text-muted-foreground mt-2">
-                            Shift: Morning
+                            Shift:{' '}
+                            {myShiftData?.shift
+                                ? myShiftData.shift.shift.name
+                                : 'No shift assigned'}
                         </div>
                     </div>
                 </div>

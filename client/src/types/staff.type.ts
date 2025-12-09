@@ -1,12 +1,17 @@
-import type { Types } from 'mongoose';
+import { IBranch } from './branch.type';
+import { IUser } from './user.type';
 
 export default interface IStaff {
-    userId: Types.ObjectId;
+    _id: string;
+    userId: string;
     staffId: string;
+
+    user: IUser;
+    branch: IBranch;
 
     phone: string;
 
-    branchId: Types.ObjectId;
+    branchId: string;
     department?: string;
     designation: string;
     joinDate: Date;

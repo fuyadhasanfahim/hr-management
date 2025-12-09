@@ -44,7 +44,7 @@ const MINUTE_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 const updateShiftSchema = z.object({
     name: z.string().min(1, 'Shift name is required'),
     code: z.string().min(1, 'Code is required'),
-    branch: z.string().min(1, 'Branch is required'),
+    branchId: z.string().min(1, 'Branch is required'),
 
     startTime: z.string().min(1, 'Start time required'),
     endTime: z.string().min(1, 'End time required'),
@@ -78,7 +78,7 @@ export default function UpdateShift({
         defaultValues: {
             name: '',
             code: '',
-            branch: '',
+            branchId: '',
 
             startTime: '',
             endTime: '',
@@ -105,7 +105,7 @@ export default function UpdateShift({
             reset({
                 name: shift.name,
                 code: shift.code,
-                branch: shift.branch,
+                branchId: shift.branchId,
 
                 startTime: shift.startTime,
                 endTime: shift.endTime,
@@ -181,7 +181,7 @@ export default function UpdateShift({
                     <div className="grid gap-2">
                         <Label>Branch *</Label>
                         <Controller
-                            name="branch"
+                            name="branchId"
                             control={control}
                             render={({ field }) => (
                                 <Select
@@ -204,9 +204,9 @@ export default function UpdateShift({
                                 </Select>
                             )}
                         />
-                        {errors.branch && (
+                        {errors.branchId && (
                             <p className="text-sm text-red-500">
-                                {errors.branch.message}
+                                {errors.branchId.message}
                             </p>
                         )}
                     </div>

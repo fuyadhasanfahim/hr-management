@@ -8,7 +8,7 @@ export interface IShift {
     name: string;
     code: string;
 
-    branch: Types.ObjectId;
+    branchId: Types.ObjectId;
 
     timeZone: string;
 

@@ -8,6 +8,7 @@ import CreateShift from './create-shift';
 import ShiftCard from './shift-card';
 import { IShift } from '@/types/shift.type';
 import ShiftCardSkeleton from './shift-card-skeleton';
+import AssignShift from './assign-shift';
 
 export default function RootShifting() {
     const { isPending, isRefetching } = useSession();
@@ -25,6 +26,7 @@ export default function RootShifting() {
                 <div className="flex items-center gap-4">
                     <CreateBranch />
                     <CreateShift />
+                    <AssignShift />
                 </div>
             </div>
 

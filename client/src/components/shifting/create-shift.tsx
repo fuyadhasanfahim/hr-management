@@ -33,6 +33,7 @@ import { Spinner } from '../ui/spinner';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { IBranch } from '@/types/branch.type';
 
 const WEEK_DAYS = [
     { label: 'Sun', value: 0 },
@@ -49,7 +50,7 @@ const MINUTE_OPTIONS = [5, 10, 15, 20, 30, 45, 60];
 const createShiftSchema = z.object({
     name: z.string().min(1, 'Shift name is required'),
     code: z.string().min(1, 'Code is required'),
-    branch: z.string().min(1, 'Branch is required'),
+    branchId: z.string().min(1, 'Branch is required'),
 
     startTime: z.string().min(1, 'Start time required'),
     endTime: z.string().min(1, 'End time required'),
@@ -78,7 +79,7 @@ export default function CreateShift() {
         defaultValues: {
             name: '',
             code: '',
-            branch: '',
+            branchId: '',
             startTime: '10:00',
             endTime: '18:00',
             otEnabled: false,
@@ -172,7 +173,7 @@ export default function CreateShift() {
                     <div className="grid gap-2">
                         <Label>Branch *</Label>
                         <Controller
-                            name="branch"
+                            name="branchId"
                             control={control}
                             render={({ field }) => (
                                 <Select
@@ -183,7 +184,7 @@ export default function CreateShift() {
                                         <SelectValue placeholder="Select branch" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {branchData?.branches?.map((b: any) => (
+                                        {branchData?.branches?.map((b: IBranch) => (
                                             <SelectItem
                                                 key={b._id}
                                                 value={b._id}
@@ -195,9 +196,9 @@ export default function CreateShift() {
                                 </Select>
                             )}
                         />
-                        {errors.branch && (
+                        {errors.branchId && (
                             <p className="text-sm text-red-500">
-                                {errors.branch.message}
+                                {errors.branchId.message}
                             </p>
                         )}
                     </div>

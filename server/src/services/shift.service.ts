@@ -1,29 +1,61 @@
+import { Types } from 'mongoose';
 import { Role } from '../consonants/role.js';
 import ShiftModel from '../models/shift.model.js';
 import StaffModel from '../models/staff.model.js';
 import type { IShift } from '../types/shift.type.js';
+import ShiftAssignmentModel from '../models/shift-assignment.model.js';
 
-const createShift = async (payload: any, userId: string, userRole: string) => {
+async function getMyShiftFromDB(userId: string) {
+    const staff = await StaffModel.findOne({ userId }).select('_id').lean();
+
+    if (!staff) {
+        throw new Error('Staff not found for this user');
+    }
+
+    const shiftAssignment = await ShiftAssignmentModel.findOne({
+        staffId: staff._id,
+        isActive: true,
+    })
+        .populate('shiftId')
+        .lean();
+
+    if (!shiftAssignment) {
+        throw new Error('No active shift assigned to this staff');
+    }
+
+    const { shiftId, ...rest } = shiftAssignment;
+
+    return {
+        ...rest,
+        shift: shiftId,
+    };
+}
+
+const createShift = async (
+    payload: IShift,
+    userId: string,
+    userRole: string
+) => {
     let branchId: any = null;
 
     if (userRole === Role.SUPER_ADMIN) {
-        branchId = payload.branch;
+        branchId = new Types.ObjectId(payload.branchId);
         if (!branchId) {
             throw new Error('Branch is required for super admin');
         }
     } else {
-        const staff = await StaffModel.findOne({ userId }).select('branch');
+        const staff = await StaffModel.findOne({ userId }).select('branchId');
 
-        if (!staff?.branch) {
+        if (!staff?.branchId) {
             throw new Error('Branch not found for this user');
         }
 
-        branchId = staff.branch;
+        branchId = staff.branchId;
     }
 
     const isExist = await ShiftModel.findOne({
         code: payload.code,
-        branch: branchId,
+        branchId: branchId,
     });
 
     if (isExist) {
@@ -32,7 +64,7 @@ const createShift = async (payload: any, userId: string, userRole: string) => {
 
     const shift = await ShiftModel.create({
         ...payload,
-        branch: branchId,
+        branchId,
         createdBy: userId,
     });
 
@@ -40,21 +72,27 @@ const createShift = async (payload: any, userId: string, userRole: string) => {
 };
 
 const getAllShifts = async (userId: string, userRole: string) => {
-    if (userRole === Role.SUPER_ADMIN) {
-        return await ShiftModel.find().sort({
+    if (
+        userRole === Role.SUPER_ADMIN ||
+        userRole === Role.ADMIN ||
+        userRole === Role.HR_MANAGER
+    ) {
+        return await ShiftModel.find().populate('branchId').sort({
             createdAt: -1,
         });
     }
 
-    const staff = await StaffModel.findOne({ userId }).select('branch');
+    const staff = await StaffModel.findOne({ userId }).populate('branchId');
 
-    if (!staff?.branch) {
+    if (!staff?.branchId) {
         throw new Error('Branch not found for this user');
     }
 
     return await ShiftModel.find({
-        branch: staff.branch,
-    }).sort({ createdAt: -1 });
+        branchId: staff.branchId,
+    })
+        .populate('branchId')
+        .sort({ createdAt: -1 });
 };
 
 const updateShift = async (
@@ -65,14 +103,18 @@ const updateShift = async (
 ) => {
     let query: any = { _id: id };
 
-    if (userRole !== Role.SUPER_ADMIN) {
-        const staff = await StaffModel.findOne({ userId }).select('branch');
+    if (
+        userRole !== Role.SUPER_ADMIN &&
+        userRole !== Role.ADMIN &&
+        userRole !== Role.HR_MANAGER
+    ) {
+        const staff = await StaffModel.findOne({ userId }).select('branchId');
 
-        if (!staff?.branch) {
+        if (!staff) {
             throw new Error('Branch not found for this user');
         }
 
-        query.branch = staff.branch;
+        query.branchId = staff.branchId;
     }
 
     const shift = await ShiftModel.findOneAndUpdate(query, payload, {
@@ -91,13 +133,13 @@ const deleteShift = async (id: string, userId: string, userRole: string) => {
     let query: any = { _id: id };
 
     if (userRole !== Role.SUPER_ADMIN) {
-        const staff = await StaffModel.findOne({ userId }).select('branch');
+        const staff = await StaffModel.findOne({ userId }).select('branchId');
 
-        if (!staff?.branch) {
+        if (!staff?.branchId) {
             throw new Error('Branch not found for this user');
         }
 
-        query.branch = staff.branch;
+        query.branchId = staff.branchId;
     }
 
     const shift = await ShiftModel.findOneAndDelete(query);
@@ -110,6 +152,7 @@ const deleteShift = async (id: string, userId: string, userRole: string) => {
 };
 
 const ShiftServices = {
+    getMyShiftFromDB,
     createShift,
     getAllShifts,
     updateShift,

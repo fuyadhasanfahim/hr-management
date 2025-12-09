@@ -84,7 +84,6 @@ export default function CreateBranch() {
         <Dialog open={!!open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant={'secondary'}
                     disabled={isLoading || !canCreate}
                 >
                     <IconPlus />

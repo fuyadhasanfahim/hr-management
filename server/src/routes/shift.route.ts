@@ -5,6 +5,8 @@ import { Role } from '../consonants/role.js';
 
 const router: Router = Router();
 
+router.get('/my-shift', ShiftControllers.getMyShift);
+
 router.post(
     '/',
     authorize(Role.ADMIN, Role.SUPER_ADMIN, Role.HR_MANAGER, Role.TEAM_LEADER),

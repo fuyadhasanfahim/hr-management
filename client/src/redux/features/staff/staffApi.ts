@@ -2,6 +2,13 @@ import { apiSlice } from '@/redux/api/apiSlice';
 
 export const staffApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
+        getStaffs: builder.query({
+            query: () => ({
+                url: '/staffs/',
+                method: 'GET',
+            }),
+            providesTags: ['Staff'],
+        }),
         getMe: builder.query({
             query: () => ({
                 url: '/staffs/me',
@@ -46,6 +53,7 @@ export const staffApi = apiSlice.injectEndpoints({
 });
 
 export const {
+    useGetStaffsQuery,
     useGetMeQuery,
     useCreateStaffMutation,
     useCompleteProfileMutation,

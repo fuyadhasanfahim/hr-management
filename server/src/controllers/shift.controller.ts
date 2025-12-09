@@ -1,6 +1,31 @@
 import type { Request, Response } from 'express';
 import ShiftServices from '../services/shift.service.js';
 
+async function getMyShift(req: Request, res: Response) {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res
+                .status(401)
+                .json({ success: false, message: 'Unauthorized' });
+        }
+
+        const shift = await ShiftServices.getMyShiftFromDB(userId);
+
+        return res.status(200).json({
+            success: true,
+            shift,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success: false,
+            message: (error as Error).message,
+        });
+    }
+}
+
 const createShift = async (req: Request, res: Response) => {
     try {
         const body = req.body;
@@ -111,6 +136,7 @@ const deleteShift = async (req: Request, res: Response) => {
 };
 
 const ShiftControllers = {
+    getMyShift,
     createShift,
     getAllShifts,
     updateShift,

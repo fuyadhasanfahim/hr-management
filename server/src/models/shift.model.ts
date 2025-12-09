@@ -17,7 +17,7 @@ const shiftSchema = new Schema<IShift>(
             trim: true,
         },
 
-        branch: {
+        branchId: {
             type: Schema.Types.ObjectId,
             ref: 'Branch',
             required: true,

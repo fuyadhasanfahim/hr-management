@@ -1,6 +1,65 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import StaffModel from '../models/staff.model.js';
 import type IStaff from '../types/staff.type.js';
+
+async function getAllStaffsFromDB() {
+    const staffs = await StaffModel.aggregate([
+        {
+            $lookup: {
+                from: 'user',
+                let: { userId: '$userId' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ['$_id', { $toObjectId: '$$userId' }],
+                            },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            name: 1,
+                            email: 1,
+                            emailVerified: 1,
+                            image: 1,
+                            role: 1,
+                            theme: 1,
+                            createdAt: 1,
+                            updatedAt: 1,
+                        },
+                    },
+                ],
+                as: 'user',
+            },
+        },
+        {
+            $unwind: {
+                path: '$user',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: 'branches',
+                localField: 'branchId',
+                foreignField: '_id',
+                as: 'branch',
+            },
+        },
+        {
+            $unwind: {
+                path: '$branch',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $sort: { createdAt: -1 },
+        },
+    ]);
+
+    return staffs;
+}
 
 async function getStaffFromDB(userId: string) {
     return StaffModel.findOne({ userId }).lean();
@@ -23,7 +82,7 @@ async function createStaffInDB(payload: { staff: Partial<IStaff> }) {
             [
                 {
                     staffId: staff.staffId as string,
-                    branch: staff.branch as string,
+                    branchId: new Types.ObjectId(staff.branchId),
                     department: staff.department as string,
                     designation: staff.designation as string,
                     joinDate: staff.joinDate as Date,
@@ -98,6 +157,7 @@ async function updateProfileInDB(payload: {
 }
 
 export default {
+    getAllStaffsFromDB,
     getStaffFromDB,
     createStaffInDB,
     completeProfileInDB,
