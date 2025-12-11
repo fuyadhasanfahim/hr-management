@@ -5,6 +5,7 @@ import { shiftRoute } from './shift.route.js';
 import { branchRoute } from './branch.route.js';
 import { attendanceRoute } from './attendance.route.js';
 import { ShiftAssignmentRoute } from './shift-assignment.route.js';
+import OvertimeRoutes from './overtime.route.js';
 
 const router: Router = Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
     {
         path: '/attendance',
         route: attendanceRoute,
+    },
+    {
+        path: '/overtime',
+        route: OvertimeRoutes,
     },
 ];
 

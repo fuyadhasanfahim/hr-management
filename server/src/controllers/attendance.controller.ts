@@ -98,13 +98,33 @@ async function getTodayAttendance(req: Request, res: Response) {
             success: true,
             attendance,
         });
-    } catch (error) {
-        return res.status(500).json({
+    } catch (error: any) {
+        res.status(500).json({
             success: false,
-            message: (error as Error).message || 'Failed to check in',
+            message:
+                error.message ||
+                'Failed to fetch today\'s attendance. Please try again.',
         });
     }
 }
 
-const AttendanceController = { checkIn, checkOut, getTodayAttendance };
+const getMonthlyStats = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) throw new Error('Unauthorized');
+
+        const result = await AttendanceServices.getMonthlyStatsInDB(userId);
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to fetch monthly stats',
+        });
+    }
+};
+
+const AttendanceController = { checkIn, checkOut, getTodayAttendance, getMonthlyStats };
 export default AttendanceController;

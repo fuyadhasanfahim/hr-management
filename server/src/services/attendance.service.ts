@@ -177,17 +177,6 @@ async function checkOutInDB({
         throw new Error('You must check in before checking out.');
     }
 
-    const event = await AttendanceEventModel.create({
-        staffId,
-        type: 'check_out',
-        at: now,
-        source,
-        ip,
-        userAgent,
-        isManual: false,
-        remarks: null,
-    });
-
     const attendanceDay = await AttendanceDayModel.findOne({
         staffId,
         date: dayStart,
@@ -200,6 +189,18 @@ async function checkOutInDB({
     if (!attendanceDay.checkInAt) {
         throw new Error('No valid check-in found for today.');
     }
+
+    const event = await AttendanceEventModel.create({
+        staffId,
+        shiftId: attendanceDay.shiftId,
+        type: 'check_out',
+        at: now,
+        source,
+        ip,
+        userAgent,
+        isManual: false,
+        remarks: null,
+    });
 
     attendanceDay.checkOutAt = now;
 
@@ -224,6 +225,25 @@ async function checkOutInDB({
                 (now.getTime() - shiftEnd.getTime()) / 60000
             );
             attendanceDay.otMinutes = otMinutes;
+        } else {
+            const earlyExitMinutes = Math.round(
+                (shiftEnd.getTime() - now.getTime()) / 60000
+            );
+            attendanceDay.earlyExitMinutes = earlyExitMinutes;
+
+            if (earlyExitMinutes >= shiftData.halfDayAfterMinutes) {
+                attendanceDay.status = 'half_day';
+            } else if (earlyExitMinutes > 0) {
+                 // Only set to early_exit if it was previously present/late, 
+                 // otherwise keep as half_day if check-in already triggered it.
+                 // However, usually we might want to flag it.
+                 // For now, let's stick to the requested consistency: if early exit > 0, status could be 'early_exit' 
+                 // OR we can leave it as 'present' with earlyExitMinutes > 0. 
+                 // But typically 'early_exit' is a status.
+                 if (attendanceDay.status === 'present' || attendanceDay.status === 'late') {
+                     attendanceDay.status = 'early_exit';
+                 }
+            }
         }
     }
 
@@ -271,8 +291,84 @@ async function getTodayAttendanceFromDB(userId: string) {
     };
 }
 
+//     };
+// }
+
+async function getMonthlyStatsInDB(userId: string) {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const staff = await StaffModel.findOne({ userId }).lean();
+    if (!staff) {
+        throw new Error('Staff not found for the user.');
+    }
+    const staffId = staff._id;
+
+    // Get Attendance Stats
+    const attendanceStats = await AttendanceDayModel.aggregate([
+        {
+            $match: {
+                staffId: staffId,
+                date: { $gte: startOfMonth, $lte: endOfMonth },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                presentCount: { $sum: 1 },
+                lateCount: {
+                    $sum: {
+                        $cond: [{ $gt: ['$lateMinutes', 0] }, 1, 0],
+                    },
+                },
+            },
+        },
+    ]);
+
+    const { default: OvertimeModel } = await import('../models/overtime.model.js');
+
+    // Get Overtime Stats
+    const overtimeStats = await OvertimeModel.aggregate([
+        {
+            $match: {
+                staffId: staffId,
+                date: { $gte: startOfMonth, $lte: endOfMonth },
+                // status: 'approved' // Should we only count approved? Or all? User just said dynamic.
+                // Usually "Total OT" implies verified or at least completed.
+                // Let's include all for now or maybe just those with endTime?
+                // Let's stick to simple sum of durationMinutes.
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                totalMinutes: { $sum: '$durationMinutes' },
+            },
+        },
+    ]);
+
+    const present = attendanceStats[0]?.presentCount || 0;
+    const late = attendanceStats[0]?.lateCount || 0;
+    const totalOvertimeMinutes = overtimeStats[0]?.totalMinutes || 0;
+
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const month = monthNames[now.getMonth()];
+
+    return {
+        month,
+        present,
+        late,
+        totalOvertimeMinutes,
+    };
+}
+
 export default {
     checkInInDB,
     checkOutInDB,
     getTodayAttendanceFromDB,
+    getMonthlyStatsInDB,
 };

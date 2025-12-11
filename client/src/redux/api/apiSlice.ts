@@ -13,6 +13,7 @@ export const apiSlice = createApi({
         'Branch',
         'Attendance',
         'ShiftAssignment',
+        'Overtime',
     ],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     endpoints: (_builder) => ({}),

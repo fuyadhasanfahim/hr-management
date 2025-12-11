@@ -25,7 +25,21 @@ export const attendanceApi = apiSlice.injectEndpoints({
             }),
             providesTags: ['Attendance'],
         }),
+        getMonthlyStats: builder.query({
+            query: () => ({
+                url: '/attendance/monthly-stats',
+                method: 'GET',
+            }),
+            // Use transformResponse if data structure is { success: true, data: ... }
+            transformResponse: (response: { data: any }) => response.data,
+            providesTags: ['Attendance', 'Overtime'], // Invalidate when Attendance OR Overtime changes
+        }),
     }),
 });
 
-export const { useCheckInMutation,useCheckOutMutation,  useGetTodayAttendanceQuery } = attendanceApi;
+export const {
+    useCheckInMutation,
+    useCheckOutMutation,
+    useGetTodayAttendanceQuery,
+    useGetMonthlyStatsQuery,
+} = attendanceApi;

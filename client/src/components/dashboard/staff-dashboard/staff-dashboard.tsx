@@ -30,6 +30,9 @@ import { User } from 'better-auth';
 import StaffHeader from './staff-header';
 import StaffTracking from './staff-tracking';
 
+import { useGetMonthlyStatsQuery } from '@/redux/features/attendance/attendanceApi';
+import { Skeleton } from '@/components/ui/skeleton';
+
 // Mock data - replace with real data from your API
 const mockUser = {
     id: '1',
@@ -44,21 +47,7 @@ const mockUser = {
     employeeId: 'EMP001',
 };
 
-const mockAttendance = {
-    today: {
-        checkIn: null,
-        checkOut: null,
-        worked: '0h 0m',
-        overtime: '0h 0m',
-        date: '2025-12-08',
-    },
-    thisMonth: {
-        present: 0,
-        late: 0,
-        totalOT: '0h 0m',
-        month: 'December',
-    },
-};
+// Removed mockAttendance.thisMonth usage
 
 const mockSalary = {
     monthly: '••••',
@@ -68,7 +57,15 @@ const mockSalary = {
     isUnlocked: false,
 };
 
+const formatDuration = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
+};
+
 export default function StaffDashboard({ user }: { user: User }) {
+    const { data: monthlyStats, isLoading } = useGetMonthlyStatsQuery({});
+
     return (
         <div className="min-h-screen bg-background space-y-6">
             <StaffHeader />
@@ -82,7 +79,11 @@ export default function StaffDashboard({ user }: { user: User }) {
                     <CardHeader>
                         <CardTitle>This Month</CardTitle>
                         <CardDescription>
-                            {mockAttendance.thisMonth.month}
+                            {isLoading ? (
+                                <Skeleton className="h-4 w-20" />
+                            ) : (
+                                monthlyStats?.month || 'Loading...'
+                            )}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -93,7 +94,11 @@ export default function StaffDashboard({ user }: { user: User }) {
                                         Present
                                     </div>
                                     <div className="text-3xl font-bold text-green-600">
-                                        {mockAttendance.thisMonth.present}
+                                        {isLoading ? (
+                                            <Skeleton className="h-8 w-12 mx-auto" />
+                                        ) : (
+                                            monthlyStats?.present || 0
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -103,7 +108,11 @@ export default function StaffDashboard({ user }: { user: User }) {
                                         Late In
                                     </div>
                                     <div className="text-3xl font-bold text-orange-600">
-                                        {mockAttendance.thisMonth.late}
+                                        {isLoading ? (
+                                            <Skeleton className="h-8 w-12 mx-auto" />
+                                        ) : (
+                                            monthlyStats?.late || 0
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -113,7 +122,14 @@ export default function StaffDashboard({ user }: { user: User }) {
                                         Total OT
                                     </div>
                                     <div className="text-xl font-bold text-blue-600">
-                                        {mockAttendance.thisMonth.totalOT}
+                                        {isLoading ? (
+                                            <Skeleton className="h-8 w-16 mx-auto" />
+                                        ) : (
+                                            formatDuration(
+                                                monthlyStats?.totalOvertimeMinutes ||
+                                                0
+                                            )
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>

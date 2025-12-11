@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+"use client"
+
+import { useState } from 'react';
 import {
     Card,
     CardHeader,
@@ -14,26 +16,45 @@ import {
     useCheckOutMutation,
     useGetTodayAttendanceQuery,
 } from '@/redux/features/attendance/attendanceApi';
+import {
+    useGetMyOvertimeQuery,
+    useStartOvertimeMutation,
+    useStopOvertimeMutation,
+} from '@/redux/features/overtime/overtimeApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-const mockAttendance = {
-    today: {
-        date: 'December 8, 2025',
-        checkIn: '09:05 AM',
-        checkOut: '...',
-        worked: '06h 30m',
-        overtime: '01h 15m',
-    },
+const formatDuration = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h}h ${m}m`;
 };
 
 export default function StaffTracking() {
     const { data: todaysData, isLoading: isLoadingToday } =
         useGetTodayAttendanceQuery({});
+    const { data: myOvertimeData, isLoading: isLoadingOT } = useGetMyOvertimeQuery({});
+
     const [checkIn, { isLoading: isCheckingIn }] = useCheckInMutation();
     const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMutation();
+    const [startOvertime, { isLoading: isStartingOT }] = useStartOvertimeMutation();
+    const [stopOvertime, { isLoading: isStoppingOT }] = useStopOvertimeMutation();
 
-    const [isStartingOT, setIsStartingOT] = useState(false);
+    const activeOT = myOvertimeData?.find((ot: any) => !ot.endTime);
+
+    // Check if any Post-Shift OT is completed for today
+    const todayOT = myOvertimeData?.find((ot: any) => {
+        const otDate = new Date(ot.date);
+        const today = new Date();
+        return (
+            otDate.getDate() === today.getDate() &&
+            otDate.getMonth() === today.getMonth() &&
+            otDate.getFullYear() === today.getFullYear() &&
+            ot.type === 'post_shift'
+        );
+    });
+
+    const isOTCompletedToday = !!todayOT && !!todayOT.endTime;
 
     const handleCheckIn = async () => {
         try {
@@ -46,7 +67,9 @@ export default function StaffTracking() {
                 return;
             }
 
-            toast.success('Checked in successfully!');
+            toast.message('Checked in successfully!', {
+                description: format(new Date(), 'hh:mm aa'),
+            });
         } catch (error: any) {
             const apiMessage =
                 error?.data?.message ||
@@ -68,7 +91,13 @@ export default function StaffTracking() {
                 return;
             }
 
-            toast.success('Checked out successfully!');
+            if (res.attendanceDay.earlyExitMinutes > 0) {
+                toast.warning('Checked out early!', {
+                    description: `You left ${res.attendanceDay.earlyExitMinutes} minutes early.`,
+                });
+            } else {
+                toast.success('Checked out successfully!');
+            }
         } catch (error: any) {
             console.log(error);
             const apiMessage =
@@ -80,17 +109,29 @@ export default function StaffTracking() {
         }
     };
 
-    const handleStartOT = () => {
-        setIsStartingOT(true);
-        setTimeout(() => {
-            setIsStartingOT(false);
-            alert('Overtime started!');
-        }, 1500);
+    const handleStartOT = async () => {
+        try {
+            await startOvertime({}).unwrap();
+            toast.success('Overtime started!');
+        } catch (error: any) {
+            toast.error(error?.data?.message || 'Failed to start overtime');
+        }
+    };
+
+    const handleStopOT = async () => {
+        try {
+            await stopOvertime({}).unwrap();
+            toast.success('Overtime stopped!');
+        } catch (error: any) {
+            toast.error(error?.data?.message || 'Failed to stop overtime');
+        }
     };
 
     const handleApplyLeave = () => {
         alert('Leave application page coming soon!');
     };
+
+    const attendanceDay = todaysData?.attendance?.attendanceDay;
 
     return (
         <Card>
@@ -114,12 +155,8 @@ export default function StaffTracking() {
                                 <LogIn className="h-4 w-4 text-primary" />
                             </div>
                             <div className="text-2xl font-bold">
-                                {todaysData?.attendance.attendanceDay?.checkInAt
-                                    ? format(
-                                          todaysData.attendance.attendanceDay
-                                              .checkInAt,
-                                          'hh:mm aa'
-                                      )
+                                {attendanceDay?.checkInAt
+                                    ? format(attendanceDay.checkInAt, 'hh:mm aa')
                                     : '...'}
                             </div>
                         </CardContent>
@@ -132,7 +169,9 @@ export default function StaffTracking() {
                                 <Clock className="h-4 w-4 text-primary" />
                             </div>
                             <div className="text-2xl font-bold">
-                                {mockAttendance.today.checkOut}
+                                {attendanceDay?.checkOutAt
+                                    ? format(attendanceDay.checkOutAt, 'hh:mm aa')
+                                    : '...'}
                             </div>
                         </CardContent>
                     </Card>
@@ -144,7 +183,9 @@ export default function StaffTracking() {
                                 <Timer className="h-4 w-4 text-green-500" />
                             </div>
                             <div className="text-2xl font-bold">
-                                {mockAttendance.today.worked}
+                                {formatDuration(
+                                    attendanceDay?.totalMinutes || 0
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -156,14 +197,14 @@ export default function StaffTracking() {
                                 <Timer className="h-4 w-4 text-orange-500" />
                             </div>
                             <div className="text-2xl font-bold">
-                                {mockAttendance.today.overtime}
+                                {formatDuration(attendanceDay?.otMinutes || 0)}
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
-                    {!todaysData?.attendance.attendanceDay?.checkInAt ? (
+                    {!attendanceDay?.checkInAt ? (
                         <Button
                             size="lg"
                             className="flex-1 shadow-md"
@@ -184,35 +225,68 @@ export default function StaffTracking() {
                             size="lg"
                             className="flex-1 shadow-md"
                             onClick={handleCheckOut}
-                            disabled={isCheckingOut}
+                            disabled={
+                                isCheckingOut || !!attendanceDay?.checkOutAt
+                            }
                         >
                             {isCheckingOut ? (
                                 <Spinner />
                             ) : (
                                 <>
                                     <LogOut className="h-5 w-5" />
-                                    Check Out
+                                    {attendanceDay?.checkOutAt
+                                        ? 'Checked Out'
+                                        : 'Check Out'}
                                 </>
                             )}
                         </Button>
                     )}
 
-                    <Button
-                        size="lg"
-                        variant="secondary"
-                        className="flex-1 shadow-md"
-                        onClick={handleStartOT}
-                        disabled={isStartingOT}
-                    >
-                        {isStartingOT ? (
-                            <Spinner />
-                        ) : (
-                            <>
-                                <Clock className="h-5 w-5" />
-                                Start OT
-                            </>
-                        )}
-                    </Button>
+                    {activeOT ? (
+                        <Button
+                            size="lg"
+                            variant="destructive"
+                            className="flex-1 shadow-md"
+                            onClick={handleStopOT}
+                            disabled={isStoppingOT}
+                        >
+                            {isStoppingOT ? (
+                                <Spinner />
+                            ) : (
+                                <>
+                                    <Clock className="h-5 w-5" />
+                                    Stop OT
+                                </>
+                            )}
+                        </Button>
+                    ) : isOTCompletedToday ? (
+                        <Button
+                            size="lg"
+                            variant="secondary"
+                            className="flex-1 shadow-md opacity-50 cursor-not-allowed"
+                            disabled={true}
+                        >
+                            <Clock className="h-5 w-5" />
+                            OT Completed
+                        </Button>
+                    ) : (
+                        <Button
+                            size="lg"
+                            variant="secondary"
+                            className="flex-1 shadow-md"
+                            onClick={handleStartOT}
+                            disabled={isStartingOT}
+                        >
+                            {isStartingOT ? (
+                                <Spinner />
+                            ) : (
+                                <>
+                                    <Clock className="h-5 w-5" />
+                                    Start OT
+                                </>
+                            )}
+                        </Button>
+                    )}
 
                     <Button
                         size="lg"

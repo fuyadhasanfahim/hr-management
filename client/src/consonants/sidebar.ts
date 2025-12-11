@@ -4,6 +4,7 @@ import {
     IconArrowsShuffle,
     IconCalendarOff,
     IconNotes,
+    IconClock,
 } from '@tabler/icons-react';
 
 export const sidebarData = [
@@ -46,6 +47,18 @@ export const sidebarData = [
         title: 'Leave Application',
         url: '/leave/apply',
         icon: IconCalendarOff,
+        access: [
+            Role.SUPER_ADMIN,
+            Role.ADMIN,
+            Role.HR_MANAGER,
+            Role.TEAM_LEADER,
+            Role.STAFF,
+        ],
+    },
+    {
+        title: 'Overtime',
+        url: '/overtime',
+        icon: IconClock,
         access: [
             Role.SUPER_ADMIN,
             Role.ADMIN,
