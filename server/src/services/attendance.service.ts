@@ -143,6 +143,136 @@ const checkInInDB = async ({
     };
 };
 
+async function checkOutInDB({
+    userId,
+    ip,
+    userAgent,
+    source = 'web',
+}: {
+    userId: string;
+    ip: string;
+    userAgent: string;
+    source?: 'web' | 'mobile' | 'manual';
+}) {
+    const now = new Date();
+
+    const dayStart = startOfDay(now);
+    const dayEnd = endOfDay(now);
+
+    const staff = await StaffModel.findOne({ userId }).lean();
+    if (!staff) {
+        throw new Error('Staff not found for the user.');
+    }
+
+    const staffId = staff._id;
+
+    const lastEvent = await AttendanceEventModel.findOne({
+        staffId,
+        at: { $gte: dayStart, $lte: dayEnd },
+    })
+        .sort({ at: -1 })
+        .lean();
+
+    if (!lastEvent || lastEvent.type !== 'check_in') {
+        throw new Error('You must check in before checking out.');
+    }
+
+    const event = await AttendanceEventModel.create({
+        staffId,
+        type: 'check_out',
+        at: now,
+        source,
+        ip,
+        userAgent,
+        isManual: false,
+        remarks: null,
+    });
+
+    const attendanceDay = await AttendanceDayModel.findOne({
+        staffId,
+        date: dayStart,
+    });
+
+    if (!attendanceDay) {
+        throw new Error('No check-in record found.');
+    }
+
+    if (!attendanceDay.checkInAt) {
+        throw new Error('No valid check-in found for today.');
+    }
+
+    attendanceDay.checkOutAt = now;
+
+    const shiftAssignment = await ShiftAssignmentModel.findOne({
+        staffId,
+        startDate: { $lte: now },
+        $or: [{ endDate: null }, { endDate: { $gte: now } }],
+        isActive: true,
+    })
+        .populate('shiftId')
+        .lean();
+
+    if (shiftAssignment?.shiftId) {
+        const shiftData = shiftAssignment.shiftId as unknown as IShift;
+
+        const shiftEnd = new Date(now);
+        const [eh, em] = shiftData.endTime.split(':');
+        shiftEnd.setHours(Number(eh), Number(em), 0, 0);
+
+        if (now > shiftEnd) {
+            const otMinutes = Math.round(
+                (now.getTime() - shiftEnd.getTime()) / 60000
+            );
+            attendanceDay.otMinutes = otMinutes;
+        }
+    }
+
+    const totalMinutes = Math.round(
+        (now.getTime() - attendanceDay.checkInAt.getTime()) / 60000
+    );
+    attendanceDay.totalMinutes = totalMinutes;
+
+    await attendanceDay.save();
+
+    return {
+        event,
+        attendanceDay,
+    };
+}
+
+async function getTodayAttendanceFromDB(userId: string) {
+    const now = new Date();
+
+    const dayStart = startOfDay(now);
+    const dayEnd = endOfDay(now);
+
+    const staff = await StaffModel.findOne({ userId }).lean();
+    if (!staff) {
+        throw new Error('Staff not found for the user.');
+    }
+
+    const staffId = staff._id;
+
+    const attendanceDay = await AttendanceDayModel.findOne({
+        staffId,
+        date: dayStart,
+    }).lean();
+
+    const attendanceEvents = await AttendanceEventModel.find({
+        staffId,
+        at: { $gte: dayStart, $lte: dayEnd },
+    })
+        .sort({ at: 1 })
+        .lean();
+
+    return {
+        attendanceDay,
+        attendanceEvents,
+    };
+}
+
 export default {
     checkInInDB,
+    checkOutInDB,
+    getTodayAttendanceFromDB,
 };

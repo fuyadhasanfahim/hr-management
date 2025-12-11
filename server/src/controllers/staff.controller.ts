@@ -3,11 +3,12 @@ import StaffServices from '../services/staff.service.js';
 
 const getStaffs = async (_req: Request, res: Response) => {
     try {
+
         const staffs = await StaffServices.getAllStaffsFromDB();
 
         return res.json({ success: true, staffs });
     } catch (err) {
-        console.log(err)
+        console.log(err);
         return res
             .status(500)
             .json({ success: false, message: (err as Error).message });

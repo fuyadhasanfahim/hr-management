@@ -37,9 +37,10 @@ export function NavMain() {
 
     const userRole = session?.user?.role;
 
-    const filteredData = sidebarData.filter((item) =>
-        userRole ? item.access.includes(userRole as Role) : false
-    );
+    const filteredData =
+        sidebarData.filter((item) =>
+            userRole ? item.access.includes(userRole as Role) : false
+        ) || [];
 
     return (
         <SidebarGroup>

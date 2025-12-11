@@ -7,10 +7,15 @@ import {
     CardContent,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, LogIn, FileText, Timer } from 'lucide-react';
+import { Clock, LogIn, FileText, Timer, LogOut } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { useCheckInMutation } from '@/redux/features/attendance/attendanceApi';
+import {
+    useCheckInMutation,
+    useCheckOutMutation,
+    useGetTodayAttendanceQuery,
+} from '@/redux/features/attendance/attendanceApi';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const mockAttendance = {
     today: {
@@ -23,7 +28,11 @@ const mockAttendance = {
 };
 
 export default function StaffTracking() {
+    const { data: todaysData, isLoading: isLoadingToday } =
+        useGetTodayAttendanceQuery({});
     const [checkIn, { isLoading: isCheckingIn }] = useCheckInMutation();
+    const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMutation();
+
     const [isStartingOT, setIsStartingOT] = useState(false);
 
     const handleCheckIn = async () => {
@@ -43,6 +52,29 @@ export default function StaffTracking() {
                 error?.data?.message ||
                 error?.error ||
                 'Failed to check in. Please try again.';
+
+            toast.error(apiMessage);
+        }
+    };
+
+    const handleCheckOut = async () => {
+        try {
+            const res = await checkOut({
+                source: 'web',
+            }).unwrap();
+
+            if (!res.success) {
+                toast.error(res.message || 'Failed to check out.');
+                return;
+            }
+
+            toast.success('Checked out successfully!');
+        } catch (error: any) {
+            console.log(error);
+            const apiMessage =
+                error?.data?.message ||
+                error?.error ||
+                'Failed to check out. Please try again.';
 
             toast.error(apiMessage);
         }
@@ -68,7 +100,7 @@ export default function StaffTracking() {
                         Time Tracking (Today)
                     </CardTitle>
                     <CardDescription className="text-sm">
-                        Date: {mockAttendance.today.date}
+                        Date: {format(new Date(), 'PPP')}
                     </CardDescription>
                 </div>
             </CardHeader>
@@ -82,7 +114,13 @@ export default function StaffTracking() {
                                 <LogIn className="h-4 w-4 text-primary" />
                             </div>
                             <div className="text-2xl font-bold">
-                                {mockAttendance.today.checkIn}
+                                {todaysData?.attendance.attendanceDay?.checkInAt
+                                    ? format(
+                                          todaysData.attendance.attendanceDay
+                                              .checkInAt,
+                                          'hh:mm aa'
+                                      )
+                                    : '...'}
                             </div>
                         </CardContent>
                     </Card>
@@ -125,21 +163,39 @@ export default function StaffTracking() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                        size="lg"
-                        className="flex-1 shadow-md"
-                        onClick={handleCheckIn}
-                        disabled={isCheckingIn}
-                    >
-                        {isCheckingIn ? (
-                            <Spinner />
-                        ) : (
-                            <>
-                                <LogIn className="h-5 w-5" />
-                                Check In
-                            </>
-                        )}
-                    </Button>
+                    {!todaysData?.attendance.attendanceDay?.checkInAt ? (
+                        <Button
+                            size="lg"
+                            className="flex-1 shadow-md"
+                            onClick={handleCheckIn}
+                            disabled={isCheckingIn}
+                        >
+                            {isCheckingIn ? (
+                                <Spinner />
+                            ) : (
+                                <>
+                                    <LogIn className="h-5 w-5" />
+                                    Check In
+                                </>
+                            )}
+                        </Button>
+                    ) : (
+                        <Button
+                            size="lg"
+                            className="flex-1 shadow-md"
+                            onClick={handleCheckOut}
+                            disabled={isCheckingOut}
+                        >
+                            {isCheckingOut ? (
+                                <Spinner />
+                            ) : (
+                                <>
+                                    <LogOut className="h-5 w-5" />
+                                    Check Out
+                                </>
+                            )}
+                        </Button>
+                    )}
 
                     <Button
                         size="lg"

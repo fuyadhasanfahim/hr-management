@@ -105,7 +105,7 @@ export default function UpdateShift({
             reset({
                 name: shift.name,
                 code: shift.code,
-                branchId: shift.branchId,
+                branchId: shift.branchId._id,
 
                 startTime: shift.startTime,
                 endTime: shift.endTime,

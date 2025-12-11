@@ -21,7 +21,7 @@ const checkIn = async (req: Request, res: Response) => {
             });
         }
 
-        const result = await AttendanceServices.checkInInDB({
+        await AttendanceServices.checkInInDB({
             userId,
             ip,
             userAgent,
@@ -31,7 +31,6 @@ const checkIn = async (req: Request, res: Response) => {
         return res.status(200).json({
             success: true,
             message: 'Checked in successfully',
-            data: result,
         });
     } catch (error) {
         return res.status(500).json({
@@ -41,5 +40,71 @@ const checkIn = async (req: Request, res: Response) => {
     }
 };
 
-const AttendanceController = { checkIn };
+async function checkOut(req: Request, res: Response) {
+    try {
+        const userId = req.user?.id;
+        const ip = req.ip;
+        const userAgent = req.headers['user-agent'] || '';
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized',
+            });
+        }
+
+        if (!ip) {
+            return res.status(400).json({
+                success: false,
+                message: 'IP address is required',
+            });
+        }
+
+        await AttendanceServices.checkOutInDB({
+            userId,
+            ip,
+            userAgent,
+            source: 'web',
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Checked out successfully',
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: (error as Error).message || 'Failed to check out',
+        });
+    }
+}
+
+async function getTodayAttendance(req: Request, res: Response) {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized',
+            });
+        }
+
+        const attendance = await AttendanceServices.getTodayAttendanceFromDB(
+            userId
+        );
+
+        return res.status(200).json({
+            success: true,
+            attendance,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: (error as Error).message || 'Failed to check in',
+        });
+    }
+}
+
+const AttendanceController = { checkIn, checkOut, getTodayAttendance };
 export default AttendanceController;

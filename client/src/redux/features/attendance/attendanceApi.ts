@@ -10,7 +10,22 @@ export const attendanceApi = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['Attendance'],
         }),
+        checkOut: builder.mutation({
+            query: (body) => ({
+                url: '/attendance/check-out',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['Attendance'],
+        }),
+        getTodayAttendance: builder.query({
+            query: () => ({
+                url: '/attendance/today',
+                method: 'GET',
+            }),
+            providesTags: ['Attendance'],
+        }),
     }),
 });
 
-export const { useCheckInMutation } = attendanceApi;
+export const { useCheckInMutation,useCheckOutMutation,  useGetTodayAttendanceQuery } = attendanceApi;
