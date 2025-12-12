@@ -32,6 +32,7 @@ import StaffTracking from './staff-tracking';
 
 import { useGetMonthlyStatsQuery } from '@/redux/features/attendance/attendanceApi';
 import { Skeleton } from '@/components/ui/skeleton';
+import StaffAttendanceTable from './staff-attendance-table';
 
 // Mock data - replace with real data from your API
 const mockUser = {
@@ -73,7 +74,7 @@ export default function StaffDashboard({ user }: { user: User }) {
             <StaffTracking />
 
             {/* This Month & Salary */}
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid lg:grid-cols-2 gap-6 items-start">
                 {/* This Month Stats */}
                 <Card>
                     <CardHeader>
@@ -213,6 +214,7 @@ export default function StaffDashboard({ user }: { user: User }) {
                     </CardContent>
                 </Card>
             </div>
+            <StaffAttendanceTable />
 
             {/* Notifications */}
             <Card>

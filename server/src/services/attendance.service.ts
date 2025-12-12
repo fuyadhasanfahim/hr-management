@@ -366,9 +366,41 @@ async function getMonthlyStatsInDB(userId: string) {
     };
 }
 
+async function getMyAttendanceHistoryInDB(userId: string, days: number = 7) {
+    const staff = await StaffModel.findOne({ userId }).lean();
+    if (!staff) {
+        throw new Error('Staff not found for the user.');
+    }
+
+    const staffId = staff._id;
+
+    // Calculate date range
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (days - 1));
+    startDate.setHours(0, 0, 0, 0);
+
+    // Find attendance days with shift details
+    const attendanceDays = await AttendanceDayModel.find({
+        staffId,
+        date: {
+            $gte: startDate,
+            $lte: endDate,
+        },
+    })
+        .populate('shiftId', 'name')
+        .sort({ date: -1 })
+        .lean();
+
+    return attendanceDays;
+}
+
 export default {
     checkInInDB,
     checkOutInDB,
     getTodayAttendanceFromDB,
     getMonthlyStatsInDB,
+    getMyAttendanceHistoryInDB,
 };

@@ -126,5 +126,31 @@ const getMonthlyStats = async (req: Request, res: Response) => {
     }
 };
 
-const AttendanceController = { checkIn, checkOut, getTodayAttendance, getMonthlyStats };
+const getMyAttendanceHistory = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) throw new Error('Unauthorized');
+
+        const days = parseInt(req.query.days as string) || 7;
+        const result = await AttendanceServices.getMyAttendanceHistoryInDB(userId, days);
+        
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to fetch attendance history',
+        });
+    }
+};
+
+const AttendanceController = { 
+    checkIn, 
+    checkOut, 
+    getTodayAttendance, 
+    getMonthlyStats,
+    getMyAttendanceHistory,
+};
 export default AttendanceController;

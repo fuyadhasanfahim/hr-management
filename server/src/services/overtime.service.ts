@@ -123,36 +123,48 @@ const startOvertimeInDB = async (userId: string) => {
     const staff = await StaffModel.findOne({ userId: new Types.ObjectId(userId) });
     if (!staff) throw new Error('Staff record not found');
 
-    // Check for any overtime today
+    // Check for scheduled OT today
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const existingOvertime = await OvertimeModel.findOne({
+    // Look for a scheduled OT (created by admin, not checked in yet)
+    const scheduledOT = await OvertimeModel.findOne({
         staffId: staff._id,
         date: {
             $gte: startOfDay,
             $lte: endOfDay,
         },
-        type: 'post_shift', // Only restrict multiple 'post_shift' sessions
+        actualStartTime: { $exists: false }, // Not checked in yet
+        endTime: { $exists: false }, // Not completed
     });
 
-    if (existingOvertime) {
-        throw new Error('You have already recorded post-shift overtime for today');
+    if (!scheduledOT) {
+        throw new Error('No scheduled overtime found for today. Please contact your manager.');
     }
 
-    const result = await OvertimeModel.create({
-        staffId: staff._id,
-        date: new Date(),
-        startTime: new Date(),
-        type: 'post_shift', 
-        status: 'pending',
-        createdBy: userId,
-    });
+    // Check if current time is >= scheduled start time
+    const currentTime = new Date();
+    const scheduledStartTime = new Date(scheduledOT.startTime);
 
-    return result;
+    if (currentTime < scheduledStartTime) {
+        const timeUntilStart = Math.ceil((scheduledStartTime.getTime() - currentTime.getTime()) / 1000 / 60);
+        throw new Error(
+            `OT will start at ${scheduledStartTime.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            })}. Please wait ${timeUntilStart} minutes.`
+        );
+    }
+
+    // User is checking in - update actualStartTime
+    scheduledOT.actualStartTime = currentTime;
+    await scheduledOT.save();
+
+    return scheduledOT;
 };
 
 const stopOvertimeInDB = async (userId: string) => {
@@ -161,7 +173,8 @@ const stopOvertimeInDB = async (userId: string) => {
 
     const activeOvertime = await OvertimeModel.findOne({
         staffId: staff._id,
-        endTime: { $exists: false },
+        actualStartTime: { $exists: true }, // Must be checked in
+        endTime: { $exists: false }, // Not ended yet
     });
 
     if (!activeOvertime) {
@@ -169,16 +182,51 @@ const stopOvertimeInDB = async (userId: string) => {
     }
 
     const endTime = new Date();
-    const durationMs = endTime.getTime() - new Date(activeOvertime.startTime).getTime();
-    const durationMinutes = Math.floor(durationMs / 1000 / 60);
+    
+    // Calculate actual duration from actualStartTime (when user checked in)
+    const actualDurationMs = endTime.getTime() - new Date(activeOvertime.actualStartTime!).getTime();
+    const actualDurationMinutes = Math.floor(actualDurationMs / 1000 / 60);
 
+    // Calculate expected duration (set by admin when creating OT)
+    const expectedDurationMinutes = activeOvertime.durationMinutes || 0;
+
+    // Calculate early stop
+    let earlyStopMinutes = 0;
+    if (expectedDurationMinutes > 0 && actualDurationMinutes < expectedDurationMinutes) {
+        earlyStopMinutes = expectedDurationMinutes - actualDurationMinutes;
+    }
+
+    // Update the record
     activeOvertime.endTime = endTime;
-    activeOvertime.durationMinutes = durationMinutes;
-    // Status remains pending until approved? Or auto-approved?
-    // Maintaining 'pending' as per original plan unless specified otherwise.
+    activeOvertime.durationMinutes = actualDurationMinutes; // Actual time worked
+    activeOvertime.earlyStopMinutes = earlyStopMinutes;
     await activeOvertime.save();
 
     return activeOvertime;
+};
+
+const getScheduledOvertimeForToday = async (userId: string) => {
+    const staff = await StaffModel.findOne({ userId: new Types.ObjectId(userId) });
+    if (!staff) throw new Error('Staff record not found');
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Look for scheduled OT today (not checked in yet, not completed)
+    const scheduledOT = await OvertimeModel.findOne({
+        staffId: staff._id,
+        date: {
+            $gte: startOfDay,
+            $lte: endOfDay,
+        },
+        actualStartTime: { $exists: false },
+        endTime: { $exists: false },
+    });
+
+    return scheduledOT;
 };
 
 export default {
@@ -190,4 +238,5 @@ export default {
     getStaffOvertimeFromDB,
     startOvertimeInDB,
     stopOvertimeInDB,
+    getScheduledOvertimeForToday,
 };

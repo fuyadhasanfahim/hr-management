@@ -28,10 +28,18 @@ const overtimeSchema = new Schema<IOvertime>(
             type: Date,
             required: true,
         },
+        actualStartTime: {
+            type: Date,
+            required: false,
+        },
         endTime: {
             type: Date,
         },
         durationMinutes: {
+            type: Number,
+            default: 0,
+        },
+        earlyStopMinutes: {
             type: Number,
             default: 0,
         },

@@ -8,5 +8,6 @@ router.post('/check-out', AttendanceController.checkOut);
 
 router.get('/today', AttendanceController.getTodayAttendance);
 router.get('/monthly-stats', AttendanceController.getMonthlyStats);
+router.get('/my-history', AttendanceController.getMyAttendanceHistory);
 
 export const attendanceRoute = router;

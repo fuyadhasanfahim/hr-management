@@ -34,6 +34,14 @@ export const attendanceApi = apiSlice.injectEndpoints({
             transformResponse: (response: { data: any }) => response.data,
             providesTags: ['Attendance', 'Overtime'], // Invalidate when Attendance OR Overtime changes
         }),
+        getMyAttendanceHistory: builder.query({
+            query: (days = 7) => ({
+                url: `/attendance/my-history?days=${days}`,
+                method: 'GET',
+            }),
+            transformResponse: (response: { data: any }) => response.data,
+            providesTags: ['Attendance'],
+        }),
     }),
 });
 
@@ -42,4 +50,5 @@ export const {
     useCheckOutMutation,
     useGetTodayAttendanceQuery,
     useGetMonthlyStatsQuery,
+    useGetMyAttendanceHistoryQuery,
 } = attendanceApi;

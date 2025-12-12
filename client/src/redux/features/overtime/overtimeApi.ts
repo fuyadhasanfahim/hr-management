@@ -63,6 +63,14 @@ export const overtimeApi = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['Overtime'],
         }),
+        getScheduledOvertimeToday: builder.query({
+            query: () => ({
+                url: '/overtime/scheduled-today',
+                method: 'GET',
+            }),
+            transformResponse: (response: { data: any }) => response.data,
+            providesTags: ['Overtime'],
+        }),
     }),
 });
 
@@ -75,4 +83,5 @@ export const {
     useDeleteOvertimeMutation,
     useStartOvertimeMutation,
     useStopOvertimeMutation,
+    useGetScheduledOvertimeTodayQuery,
 } = overtimeApi;

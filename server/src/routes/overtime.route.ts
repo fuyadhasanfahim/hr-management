@@ -24,6 +24,12 @@ OvertimeRoutes.post(
     OvertimeController.stopStaffOvertime
 );
 
+OvertimeRoutes.get(
+    '/scheduled-today',
+    authorize(Role.STAFF, Role.SUPER_ADMIN, Role.ADMIN, Role.HR_MANAGER, Role.TEAM_LEADER),
+    OvertimeController.getScheduledOvertimeToday
+);
+
 // Admin routes (CRUD)
 const adminRoles = [
     Role.SUPER_ADMIN,

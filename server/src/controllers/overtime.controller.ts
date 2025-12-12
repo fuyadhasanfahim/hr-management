@@ -151,6 +151,24 @@ const stopStaffOvertime = async (req: Request, res: Response) => {
     }
 };
 
+const getScheduledOvertimeToday = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) throw new Error('Unauthorized');
+
+        const result = await OvertimeServices.getScheduledOvertimeForToday(userId);
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to fetch scheduled overtime',
+        });
+    }
+};
+
 export default {
     createOvertime,
     getAllOvertime,
@@ -160,4 +178,5 @@ export default {
     deleteOvertime,
     startStaffOvertime,
     stopStaffOvertime,
+    getScheduledOvertimeToday,
 };

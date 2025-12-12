@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Card,
     CardHeader,
@@ -20,6 +20,7 @@ import {
     useGetMyOvertimeQuery,
     useStartOvertimeMutation,
     useStopOvertimeMutation,
+    useGetScheduledOvertimeTodayQuery,
 } from '@/redux/features/overtime/overtimeApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -34,27 +35,80 @@ export default function StaffTracking() {
     const { data: todaysData, isLoading: isLoadingToday } =
         useGetTodayAttendanceQuery({});
     const { data: myOvertimeData, isLoading: isLoadingOT } = useGetMyOvertimeQuery({});
+    const { data: scheduledOT } = useGetScheduledOvertimeTodayQuery({});
 
     const [checkIn, { isLoading: isCheckingIn }] = useCheckInMutation();
     const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMutation();
     const [startOvertime, { isLoading: isStartingOT }] = useStartOvertimeMutation();
     const [stopOvertime, { isLoading: isStoppingOT }] = useStopOvertimeMutation();
 
-    const activeOT = myOvertimeData?.find((ot: any) => !ot.endTime);
+    const [countdown, setCountdown] = useState<string>('');
 
-    // Check if any Post-Shift OT is completed for today
-    const todayOT = myOvertimeData?.find((ot: any) => {
-        const otDate = new Date(ot.date);
+    // Find active OT (checked in but not ended)
+    const activeOT = myOvertimeData?.find((ot: any) => ot.actualStartTime && !ot.endTime);
+
+    // Update countdown every second if there's a scheduled OT
+    useEffect(() => {
+        if (!scheduledOT) return;
+
+        const updateCountdown = () => {
+            const now = new Date();
+            const scheduledTime = new Date(scheduledOT.startTime);
+            const diff = scheduledTime.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                setCountdown('Ready to start');
+            } else {
+                const minutes = Math.floor(diff / 1000 / 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+                setCountdown(`Starts in ${minutes}m ${seconds}s`);
+            }
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+
+        return () => clearInterval(interval);
+    }, [scheduledOT]);
+
+    // Calculate current OT minutes
+    const getCurrentOTMinutes = () => {
+        if (activeOT && activeOT.actualStartTime) {
+            // OT is running - calculate live duration
+            const now = new Date();
+            const startTime = new Date(activeOT.actualStartTime);
+            const durationMs = now.getTime() - startTime.getTime();
+            return Math.floor(durationMs / 1000 / 60);
+        }
+
+        // Check for completed OT today
         const today = new Date();
-        return (
-            otDate.getDate() === today.getDate() &&
-            otDate.getMonth() === today.getMonth() &&
-            otDate.getFullYear() === today.getFullYear() &&
-            ot.type === 'post_shift'
-        );
-    });
+        const completedOTToday = myOvertimeData?.find((ot: any) => {
+            const otDate = new Date(ot.date);
+            return (
+                otDate.getDate() === today.getDate() &&
+                otDate.getMonth() === today.getMonth() &&
+                otDate.getFullYear() === today.getFullYear() &&
+                ot.endTime // Completed
+            );
+        });
 
-    const isOTCompletedToday = !!todayOT && !!todayOT.endTime;
+        return completedOTToday?.durationMinutes || 0;
+    };
+
+    const [currentOTMinutes, setCurrentOTMinutes] = useState(0);
+
+    // Update OT minutes every second if OT is active
+    useEffect(() => {
+        const updateOTMinutes = () => {
+            setCurrentOTMinutes(getCurrentOTMinutes());
+        };
+
+        updateOTMinutes();
+        const interval = setInterval(updateOTMinutes, 1000);
+
+        return () => clearInterval(interval);
+    }, [activeOT, myOvertimeData]);
 
     const handleCheckIn = async () => {
         try {
@@ -120,18 +174,27 @@ export default function StaffTracking() {
 
     const handleStopOT = async () => {
         try {
-            await stopOvertime({}).unwrap();
-            toast.success('Overtime stopped!');
+            const result = await stopOvertime({}).unwrap();
+
+            // Check if stopped early
+            if (result.data?.earlyStopMinutes > 0) {
+                toast.warning('OT stopped early!', {
+                    description: `You stopped ${result.data.earlyStopMinutes} minutes before the scheduled duration.`,
+                });
+            } else {
+                toast.success('Overtime stopped!');
+            }
         } catch (error: any) {
             toast.error(error?.data?.message || 'Failed to stop overtime');
         }
     };
 
     const handleApplyLeave = () => {
-        alert('Leave application page coming soon!');
+        toast.warning('Leave application page coming soon!');
     };
 
     const attendanceDay = todaysData?.attendance?.attendanceDay;
+    console.log(attendanceDay);
 
     return (
         <Card>
@@ -197,7 +260,7 @@ export default function StaffTracking() {
                                 <Timer className="h-4 w-4 text-orange-500" />
                             </div>
                             <div className="text-2xl font-bold">
-                                {formatDuration(attendanceDay?.otMinutes || 0)}
+                                {formatDuration(currentOTMinutes)}
                             </div>
                         </CardContent>
                     </Card>
@@ -259,7 +322,24 @@ export default function StaffTracking() {
                                 </>
                             )}
                         </Button>
-                    ) : isOTCompletedToday ? (
+                    ) : scheduledOT ? (
+                        <Button
+                            size="lg"
+                            variant="secondary"
+                            className="flex-1 shadow-md"
+                            onClick={handleStartOT}
+                            disabled={isStartingOT || countdown !== 'Ready to start'}
+                        >
+                            {isStartingOT ? (
+                                <Spinner />
+                            ) : (
+                                <>
+                                    <Clock className="h-5 w-5" />
+                                    {countdown || 'Start OT'}
+                                </>
+                            )}
+                        </Button>
+                    ) : (
                         <Button
                             size="lg"
                             variant="secondary"
@@ -267,24 +347,7 @@ export default function StaffTracking() {
                             disabled={true}
                         >
                             <Clock className="h-5 w-5" />
-                            OT Completed
-                        </Button>
-                    ) : (
-                        <Button
-                            size="lg"
-                            variant="secondary"
-                            className="flex-1 shadow-md"
-                            onClick={handleStartOT}
-                            disabled={isStartingOT}
-                        >
-                            {isStartingOT ? (
-                                <Spinner />
-                            ) : (
-                                <>
-                                    <Clock className="h-5 w-5" />
-                                    Start OT
-                                </>
-                            )}
+                            No OT Scheduled
                         </Button>
                     )}
 
