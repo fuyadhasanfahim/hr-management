@@ -5,7 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { NavUser } from './nav-user';
 import { usePathname } from 'next/navigation';
 import { getSiteHeader } from '@/utils/getSiteHeader';
-import Notification from './notification';
+import NotificationBell from '@/components/notification-bell';
 
 export function SiteHeader() {
     const pathname = usePathname();
@@ -21,7 +21,7 @@ export function SiteHeader() {
                 />
                 <h1 className="text-base font-medium">{title}</h1>
                 <div className="ml-auto flex items-center">
-                    <Notification />
+                    <NotificationBell />
                     <Separator
                         orientation="vertical"
                         className="mx-3 data-[orientation=vertical]:h-4"

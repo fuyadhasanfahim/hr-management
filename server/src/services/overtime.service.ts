@@ -97,9 +97,34 @@ const getOvertimeByIdFromDB = async (id: string) => {
 };
 
 const updateOvertimeInDB = async (id: string, payload: Partial<IOvertime>) => {
+    // Get the overtime record before update
+    const overtime = await OvertimeModel.findById(id).populate('staffId');
+    
     const result = await OvertimeModel.findByIdAndUpdate(id, payload, {
         new: true,
     });
+    
+    // Send notification if status changed to approved or rejected
+    if (payload.status && overtime && (payload.status === 'approved' || payload.status === 'rejected')) {
+        const { default: NotificationServices } = await import('./notification.service.js');
+        const staff = overtime.staffId as any;
+        
+        if (staff?.userId) {
+            await NotificationServices.notifyOvertimeStatus({
+                staffUserId: staff.userId,
+                overtimeId: overtime._id,
+                status: payload.status,
+                hours: Math.floor(overtime.durationMinutes / 60),
+                date: new Date(overtime.date).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                }),
+                approvedBy: payload.approvedBy || overtime.createdBy!,
+            });
+        }
+    }
+    
     return result;
 };
 
