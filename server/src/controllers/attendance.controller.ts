@@ -99,7 +99,7 @@ async function getTodayAttendance(req: Request, res: Response) {
             attendance,
         });
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message:
                 error.message ||
@@ -114,12 +114,12 @@ const getMonthlyStats = async (req: Request, res: Response) => {
         if (!userId) throw new Error('Unauthorized');
 
         const result = await AttendanceServices.getMonthlyStatsInDB(userId);
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: result,
         });
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error.message || 'Failed to fetch monthly stats',
         });
@@ -134,12 +134,12 @@ const getMyAttendanceHistory = async (req: Request, res: Response) => {
         const days = parseInt(req.query.days as string) || 7;
         const result = await AttendanceServices.getMyAttendanceHistoryInDB(userId, days);
         
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: result,
         });
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error.message || 'Failed to fetch attendance history',
         });

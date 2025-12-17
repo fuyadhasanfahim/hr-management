@@ -15,6 +15,7 @@ export const apiSlice = createApi({
         'ShiftAssignment',
         'Overtime',
         'Notification',
+        'Invitation',
     ],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     endpoints: (_builder) => ({}),

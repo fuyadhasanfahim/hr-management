@@ -6,6 +6,10 @@ import { branchRoute } from './branch.route.js';
 import { attendanceRoute } from './attendance.route.js';
 import { ShiftAssignmentRoute } from './shift-assignment.route.js';
 import OvertimeRoutes from './overtime.route.js';
+import { dashboardRoute } from './dashboard.route.js';
+import { invitationRoute } from './invitation.route.js';
+import { analyticsRoute } from './analytics.route.js';
+
 
 const router: Router = Router();
 
@@ -37,6 +41,18 @@ const moduleRoutes = [
     {
         path: '/overtime',
         route: OvertimeRoutes,
+    },
+    {
+        path: '/dashboard',
+        route: dashboardRoute,
+    },
+    {
+        path: '/invitations',
+        route: invitationRoute,
+    },
+    {
+        path: '/analytics',
+        route: analyticsRoute,
     },
 ];
 

@@ -5,6 +5,7 @@ import {
     IconCalendarOff,
     IconNotes,
     IconClock,
+    IconMail,
 } from '@tabler/icons-react';
 
 export const sidebarData = [
@@ -18,6 +19,16 @@ export const sidebarData = [
             Role.HR_MANAGER,
             Role.TEAM_LEADER,
             Role.STAFF,
+        ],
+    },
+    {
+        title: 'Invitations',
+        url: '/invitations',
+        icon: IconMail,
+        access: [
+            Role.SUPER_ADMIN,
+            Role.ADMIN,
+            Role.HR_MANAGER,
         ],
     },
     {

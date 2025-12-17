@@ -27,6 +27,9 @@ export default interface IStaff {
     mothersName?: string;
     spouseName?: string;
 
+    salary: number;
+    salaryVisibleToEmployee: boolean;
+
     profileCompleted: boolean;
 
     exitDate?: Date;

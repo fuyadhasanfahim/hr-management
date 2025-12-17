@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 
-export interface INotification {
+export default interface INotification {
     userId: Types.ObjectId;
     title: string;
     message: string;
@@ -17,5 +17,3 @@ export interface INotification {
     createdAt: Date;
     updatedAt: Date;
 }
-
-export default INotification;

@@ -156,10 +156,95 @@ async function updateProfileInDB(payload: {
     return updated;
 }
 
+async function viewSalaryWithPassword(payload: { userId: string; password: string }) {
+    const { userId, password } = payload;
+    
+    // Get user from database
+    const db = (await import('../lib/db.js')).client;
+    const mongoClient = await db();
+    const envConfig = (await import('../config/env.config.js')).default;
+    const database = mongoClient.db(envConfig.db_name);
+    
+    const user = await database.collection('user').findOne({ _id: new Types.ObjectId(userId) });
+    
+    if (!user) {
+        throw new Error('User not found');
+    }
+    
+    // Verify password using crypto
+    const crypto = await import('crypto');
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    
+    if (user.password !== hashedPassword) {
+        throw new Error('Invalid password');
+    }
+    
+    // Get staff record
+    const staff = await StaffModel.findOne({ userId }).lean();
+    
+    if (!staff) {
+        throw new Error('Staff profile not found');
+    }
+    
+    if (!staff.salaryVisibleToEmployee) {
+        throw new Error('Salary information is currently hidden by administrator');
+    }
+    
+    return {
+        salary: staff.salary,
+        salaryVisibleToEmployee: staff.salaryVisibleToEmployee,
+    };
+}
+
+async function updateSalaryInDB(payload: {
+    staffId: string;
+    salary?: number;
+    salaryVisibleToEmployee?: boolean;
+    changedBy?: string;
+    reason?: string;
+}) {
+    const { staffId, salary, salaryVisibleToEmployee, changedBy, reason } = payload;
+    
+    const staff = await StaffModel.findById(staffId);
+    if (!staff) throw new Error('Staff not found');
+    
+    // Save history if salary changed
+    if (salary !== undefined && salary !== staff.salary && changedBy) {
+        const SalaryHistoryModel = (await import('../models/salary-history.model.js')).default;
+        await (SalaryHistoryModel.create as any)({
+            staffId,
+            previousSalary: staff.salary,
+            newSalary: salary,
+            changedBy,
+            reason,
+        });
+    }
+    
+    const updateData: any = {};
+    if (salary !== undefined) updateData.salary = salary;
+    if (salaryVisibleToEmployee !== undefined) updateData.salaryVisibleToEmployee = salaryVisibleToEmployee;
+    
+    const updated = await StaffModel.findByIdAndUpdate(
+        staffId,
+        { $set: updateData },
+        { new: true }
+    );
+    
+    return updated;
+}
+
+async function getSalaryHistory(staffId: string) {
+    const SalaryHistoryModel = (await import('../models/salary-history.model.js')).default;
+    return await SalaryHistoryModel.find({ staffId: staffId as any }).sort({ createdAt: -1 }).limit(50);
+}
+
 export default {
     getAllStaffsFromDB,
     getStaffFromDB,
     createStaffInDB,
     completeProfileInDB,
     updateProfileInDB,
+    viewSalaryWithPassword,
+    updateSalaryInDB,
+    getSalaryHistory,
 };

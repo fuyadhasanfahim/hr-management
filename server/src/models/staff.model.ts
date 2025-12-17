@@ -123,6 +123,19 @@ const StaffSchema = new Schema<IStaff>(
             type: Date,
         },
 
+        salary: {
+            type: Number,
+            required: true,
+            min: 0,
+            default: 0,
+            index: true,
+        },
+
+        salaryVisibleToEmployee: {
+            type: Boolean,
+            default: true,
+        },
+
         profileCompleted: {
             type: Boolean,
             default: false,

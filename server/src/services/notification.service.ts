@@ -1,5 +1,4 @@
 import NotificationModel from '../models/notification.model.js';
-import StaffModel from '../models/staff.model.js';
 import { Types } from 'mongoose';
 
 // Create a notification for a single user
@@ -16,20 +15,23 @@ const createNotification = async (data: {
     createdBy?: Types.ObjectId | string;
     expiresAt?: Date;
 }) => {
-    const notification = await NotificationModel.create({
-        userId: data.userId,
+    const payload: any = {
+        userId: new Types.ObjectId(data.userId),
         title: data.title,
         message: data.message,
         type: data.type,
         priority: data.priority || 'medium',
-        resourceType: data.resourceType,
-        resourceId: data.resourceId,
-        actionUrl: data.actionUrl,
-        actionLabel: data.actionLabel,
         isRead: false,
-        createdBy: data.createdBy,
         expiresAt: data.expiresAt,
-    });
+    };
+
+    if (data.resourceType) payload.resourceType = data.resourceType;
+    if (data.resourceId) payload.resourceId = new Types.ObjectId(data.resourceId);
+    if (data.actionUrl) payload.actionUrl = data.actionUrl;
+    if (data.actionLabel) payload.actionLabel = data.actionLabel;
+    if (data.createdBy) payload.createdBy = new Types.ObjectId(data.createdBy);
+
+    const notification = await NotificationModel.create(payload);
 
     return notification;
 };
@@ -211,12 +213,12 @@ const notifyAdminsOvertimeRequest = async (data: {
     
     // Note: Assuming you have a User model with role field
     // Adjust based on your actual user model structure
-    const admins = await UserModel.find({
+    const admins = await (UserModel.find({
         role: { $in: ['super_admin', 'admin', 'hr_manager'] }
-    }).lean();
+    }) as any).lean();
 
     // Create notification for each admin
-    const notifications = admins.map(admin => ({
+    const notifications = admins.map((admin: any) => ({
         userId: admin._id,
         title: '⏰ Overtime Approval Needed',
         message: `${data.staffName} requested ${data.hours} hours overtime for ${data.date}`,
