@@ -472,7 +472,6 @@ async function updateAttendanceStatusInDB({
     attendanceId,
     status,
     notes,
-    updatedBy,
 }: {
     attendanceId: string;
     status: string;
@@ -490,9 +489,6 @@ async function updateAttendanceStatusInDB({
     if (!attendanceDay) {
         throw new Error('Attendance record not found');
     }
-    
-    // Store old status for audit
-    const oldStatus = attendanceDay.status;
     
     // Update attendance
     attendanceDay.status = status as any;
