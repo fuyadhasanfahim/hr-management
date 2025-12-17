@@ -42,6 +42,21 @@ export const attendanceApi = apiSlice.injectEndpoints({
             transformResponse: (response: { data: any }) => response.data,
             providesTags: ['Attendance'],
         }),
+        getAllAttendance: builder.query({
+            query: (filters) => ({
+                url: '/attendance/admin/all',
+                params: filters,
+            }),
+            providesTags: ['Attendance'],
+        }),
+        updateAttendanceStatus: builder.mutation({
+            query: ({ id, status, notes }) => ({
+                url: `/attendance/admin/${id}`,
+                method: 'PATCH',
+                body: { status, notes },
+            }),
+            invalidatesTags: ['Attendance'],
+        }),
     }),
 });
 
@@ -51,4 +66,6 @@ export const {
     useGetTodayAttendanceQuery,
     useGetMonthlyStatsQuery,
     useGetMyAttendanceHistoryQuery,
+    useGetAllAttendanceQuery,
+    useUpdateAttendanceStatusMutation,
 } = attendanceApi;

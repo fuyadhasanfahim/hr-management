@@ -4,7 +4,11 @@ import type { NextRequest } from 'next/server';
 import { canAccess } from '@/utils/canAccess';
 import { Role } from '@/consonants/role';
 
-const publicRoutes = new Set(['/sign-in', '/forget-password']);
+const publicRoutes = new Set([
+    '/sign-in',
+    '/forget-password',
+    '/reset-password',
+]);
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -25,7 +29,7 @@ export async function proxy(request: NextRequest) {
         const sessionToken = getSessionCookie(request);
 
         if (!sessionToken) {
-            if (publicRoutes.has(pathname)) {
+            if (publicRoutes.has(pathname) || pathname.startsWith('/sign-up')) {
                 return NextResponse.next();
             }
             return NextResponse.redirect(new URL('/sign-in', request.url));

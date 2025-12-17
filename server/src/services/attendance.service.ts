@@ -397,10 +397,130 @@ async function getMyAttendanceHistoryInDB(userId: string, days: number = 7) {
     return attendanceDays;
 }
 
+async function getAllAttendanceFromDB({
+    startDate,
+    endDate,
+    staffId,
+    status,
+    branchId,
+    page = 1,
+    limit = 50,
+}: {
+    startDate?: string;
+    endDate?: string;
+    staffId?: string;
+    status?: string;
+    branchId?: string;
+    page?: number;
+    limit?: number;
+}) {
+    const query: any = {};
+    
+    // Date filter
+    if (startDate || endDate) {
+        query.date = {};
+        if (startDate) query.date.$gte = new Date(startDate);
+        if (endDate) query.date.$lte = new Date(endDate);
+    }
+    
+    // Status filter
+    if (status) {
+        query.status = status;
+    }
+    
+    // Staff filter
+    if (staffId) {
+        query.staffId = staffId;
+    }
+    
+    const skip = (page - 1) * limit;
+    
+    // Get attendance records with populated staff and shift details
+    const attendanceRecords = await AttendanceDayModel.find(query)
+        .populate({
+            path: 'staffId',
+            select: 'staffId designation department branchId',
+        })
+        .populate('shiftId', 'name startTime endTime')
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+    
+    // Apply branch filter if needed (after population)
+    let filteredRecords = attendanceRecords;
+    if (branchId) {
+        filteredRecords = attendanceRecords.filter((record: any) => 
+            record.staffId?.branchId?.toString() === branchId
+        );
+    }
+    
+    const total = await AttendanceDayModel.countDocuments(query);
+    
+    return {
+        records: filteredRecords,
+        pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+        },
+    };
+}
+
+async function updateAttendanceStatusInDB({
+    attendanceId,
+    status,
+    notes,
+    updatedBy,
+}: {
+    attendanceId: string;
+    status: string;
+    notes?: string;
+    updatedBy: string;
+}) {
+    const validStatuses = ['present', 'absent', 'on_leave', 'weekend', 'holiday', 'half_day', 'late', 'early_exit'];
+    
+    if (!validStatuses.includes(status)) {
+        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    }
+    
+    const attendanceDay = await AttendanceDayModel.findById(attendanceId);
+    
+    if (!attendanceDay) {
+        throw new Error('Attendance record not found');
+    }
+    
+    // Store old status for audit
+    const oldStatus = attendanceDay.status;
+    
+    // Update attendance
+    attendanceDay.status = status as any;
+    attendanceDay.isManual = true;
+    if (notes) {
+        attendanceDay.notes = notes;
+    }
+    
+    await attendanceDay.save();
+    
+    // Log audit trail (optional - import AuditLog model if you have it)
+    // await AuditLogModel.create({
+    //     action: 'UPDATE_ATTENDANCE_STATUS',
+    //     performedBy: updatedBy,
+    //     targetId: attendanceId,
+    //     changes: { from: oldStatus, to: status },
+    //     notes,
+    // });
+    
+    return attendanceDay;
+}
+
 export default {
     checkInInDB,
     checkOutInDB,
     getTodayAttendanceFromDB,
     getMonthlyStatsInDB,
     getMyAttendanceHistoryInDB,
+    getAllAttendanceFromDB,
+    updateAttendanceStatusInDB,
 };

@@ -6,6 +6,7 @@ import {
     IconNotes,
     IconClock,
     IconMail,
+    IconCalendarStats,
 } from '@tabler/icons-react';
 
 export const sidebarData = [
@@ -25,6 +26,16 @@ export const sidebarData = [
         title: 'Invitations',
         url: '/invitations',
         icon: IconMail,
+        access: [
+            Role.SUPER_ADMIN,
+            Role.ADMIN,
+            Role.HR_MANAGER,
+        ],
+    },
+    {
+        title: 'Attendance',
+        url: '/attendance',
+        icon: IconCalendarStats,
         access: [
             Role.SUPER_ADMIN,
             Role.ADMIN,

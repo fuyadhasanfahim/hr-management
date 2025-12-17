@@ -52,7 +52,7 @@ const createInvitation = async (data: IInvitationCreate) => {
     });
     
     // Send email
-    const signupUrl = `${envConfig.client_url}/signup/${token}`;
+    const signupUrl = `${envConfig.client_url}/sign-up/${token}`;
     await sendMail({
         to: data.email,
         subject: 'You\'re Invited to Join Our Team',
@@ -112,26 +112,37 @@ const acceptInvitation = async (data: IAcceptInvitation) => {
     const invitation = await validateToken(token);
     
     // Create user account using Better Auth
+    const { auth } = await import('../lib/auth.js');
+    
+    const newUser = await auth.api.signUpEmail({
+        body: {
+            email: invitation.email,
+            password: userData.password,
+            name: userData.name,
+            role: invitation.role || 'staff',
+        }
+    });
+
+    if (!newUser || !newUser.user) {
+        throw new Error('Failed to create user account');
+    }
+
+    const userId = newUser.user.id;
+
+    // Manually set emailVerified to true and theme to system since we trust the invitation
     const db = (await import('../lib/db.js')).client;
     const mongoClient = await db();
     const database = mongoClient.db(envConfig.db_name);
     
-    // Hash password using Node crypto (simple hash for now)
-    const hashedPassword = crypto.createHash('sha256').update(userData.password).digest('hex');
-    
-    // Create user
-    const newUser = await database.collection('user').insertOne({
-        name: userData.name,
-        email: invitation.email,
-        emailVerified: true, // Auto-verify invited users
-        password: hashedPassword,
-        role: invitation.role,
-        theme: 'system',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    });
-    
-    const userId = newUser.insertedId;
+    await database.collection('user').updateOne(
+        { _id: new Types.ObjectId(userId) },
+        { 
+            $set: { 
+                emailVerified: true,
+                theme: 'system'
+            } 
+        }
+    );
     
     // Generate staff ID
     const staffCount = await StaffModel.countDocuments();
@@ -201,7 +212,7 @@ const resendInvitation = async (invitationId: string) => {
     await invitation.save();
     
     // Resend email
-    const signupUrl = `${envConfig.client_url}/signup/${invitation.token}`;
+    const signupUrl = `${envConfig.client_url}/sign-up/${invitation.token}`;
     await sendMail({
         to: invitation.email,
         subject: 'Reminder: Complete Your Registration',

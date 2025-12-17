@@ -286,6 +286,7 @@ export default function StaffTracking() {
                     ) : (
                         <Button
                             size="lg"
+                            variant={attendanceDay?.checkOutAt ? "default" : "destructive"}
                             className="flex-1 shadow-md"
                             onClick={handleCheckOut}
                             disabled={

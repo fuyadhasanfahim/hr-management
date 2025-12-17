@@ -61,13 +61,23 @@ export default function SignupPage() {
     }
 
     if (error || !data?.success) {
+        let errorMessage = 'This invitation link is invalid or has expired.';
+
+        if (error) {
+            if ('data' in error && typeof error.data === 'object' && error.data && 'message' in error.data) {
+                errorMessage = (error.data as any).message;
+            } else if ('message' in error) {
+                errorMessage = error.message as string; // SerializedError
+            }
+        }
+
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <Card className="w-full max-w-md">
                     <CardHeader>
-                        <CardTitle>Invalid Invitation</CardTitle>
-                        <CardDescription>
-                            This invitation link is invalid or has expired.
+                        <CardTitle className="text-destructive">Invalid Invitation</CardTitle>
+                        <CardDescription className="text-destructive font-medium">
+                            {errorMessage}
                         </CardDescription>
                     </CardHeader>
                 </Card>

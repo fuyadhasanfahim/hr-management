@@ -146,11 +146,75 @@ const getMyAttendanceHistory = async (req: Request, res: Response) => {
     }
 };
 
+const getAllAttendance = async (req: Request, res: Response) => {
+    try {
+        const { startDate, endDate, staffId, status, branchId, page = '1', limit = '50' } = req.query;
+        
+        console.log('getAllAttendance called with params:', { startDate, endDate, staffId, status, branchId, page, limit });
+        
+        const result = await AttendanceServices.getAllAttendanceFromDB({
+            startDate: startDate as string,
+            endDate: endDate as string,
+            staffId: staffId as string,
+            status: status as string,
+            branchId: branchId as string,
+            page: parseInt(page as string) || 1,
+            limit: parseInt(limit as string) || 50,
+        });
+        
+        return res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error: any) {
+        console.error('Error in getAllAttendance:', error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to fetch attendance records',
+        });
+    }
+};
+
+const updateAttendanceStatus = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { status, notes } = req.body;
+        const updatedBy = req.user?.id;
+        
+        if (!updatedBy) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized',
+            });
+        }
+        
+        const result = await AttendanceServices.updateAttendanceStatusInDB({
+            attendanceId: id as string,
+            status,
+            notes,
+            updatedBy,
+        });
+        
+        return res.status(200).json({
+            success: true,
+            message: 'Attendance status updated successfully',
+            data: result,
+        });
+    } catch (error: any) {
+        return res.status(400).json({
+            success: false,
+            message: error.message || 'Failed to update attendance status',
+        });
+    }
+};
+
 const AttendanceController = { 
     checkIn, 
     checkOut, 
     getTodayAttendance, 
     getMonthlyStats,
     getMyAttendanceHistory,
+    getAllAttendance,
+    updateAttendanceStatus,
 };
 export default AttendanceController;

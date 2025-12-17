@@ -25,7 +25,24 @@ app.all('/api/auth/{*any}', toNodeHandler(auth));
 
 app.use(express.json());
 
-app.use('/api', requireAuth, router);
+app.use(
+    '/api',
+    (req: Request, res: Response, next: any) => {
+        // Allow public access to invitation validation and acceptance
+        const isPublicInvitationRoute =
+            (req.method === 'GET' &&
+                /^\/invitations\/[^/]+\/validate$/.test(req.path)) ||
+            (req.method === 'POST' &&
+                /^\/invitations\/[^/]+\/accept$/.test(req.path));
+
+        if (isPublicInvitationRoute) {
+            return next();
+        }
+
+        return requireAuth(req, res, next);
+    },
+    router
+);
 
 app.get('/', (_req: Request, res: Response) => {
     res.send('Hello World!');

@@ -34,6 +34,22 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
+        async sendResetPassword(data, request) {
+            console.log(`[Auth] Attempting to send reset password email to: ${data.user.email}`);
+            try {
+                await sendMail({
+                    to: data.user.email,
+                    subject: 'Reset Your Password',
+                    body: `<h1>Hello ${data.user.name || ''}</h1>
+                    <p>Click the link below to reset your password:</p>
+                    <a href="${data.url}">Reset Password</a>
+                    <p>If you did not request this, please ignore this email.</p>`,
+                });
+                console.log(`[Auth] Reset password email sent successfully to: ${data.user.email}`);
+            } catch (error) {
+                console.error(`[Auth] Failed to send reset password email to ${data.user.email}:`, error);
+            }
+        },
     },
     emailVerification: {
         sendOnSignUp: true,

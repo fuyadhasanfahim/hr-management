@@ -132,7 +132,7 @@ export default function SigninForm() {
                                 <span className="text-destructive">*</span>
                             </Label>
                             <Link
-                                href="/forgot-password"
+                                href="/forget-password"
                                 className="text-primary hover:underline"
                             >
                                 Forgot your password?

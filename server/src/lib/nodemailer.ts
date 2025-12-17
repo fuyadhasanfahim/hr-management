@@ -61,6 +61,7 @@ export async function sendMail({
     while (true) {
         try {
             await t.sendMail(mailOptions);
+            console.log(`[Nodemailer] Email sent to: ${to}`);
             return;
         } catch (err) {
             attempt++;
