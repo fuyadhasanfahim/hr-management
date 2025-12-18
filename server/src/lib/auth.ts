@@ -35,9 +35,6 @@ export const auth = betterAuth({
         enabled: true,
         requireEmailVerification: true,
         async sendResetPassword(data) {
-            console.log(
-                `[Auth] Attempting to send reset password email to: ${data.user.email}`
-            );
             try {
                 await sendMail({
                     to: data.user.email,
@@ -47,9 +44,6 @@ export const auth = betterAuth({
                     <a href="${data.url}">Reset Password</a>
                     <p>If you did not request this, please ignore this email.</p>`,
                 });
-                console.log(
-                    `[Auth] Reset password email sent successfully to: ${data.user.email}`
-                );
             } catch (error) {
                 console.error(
                     `[Auth] Failed to send reset password email to ${data.user.email}:`,
@@ -72,22 +66,4 @@ export const auth = betterAuth({
         },
     },
     trustedOrigins: trusted_origins.split(','),
-    cookies: {
-        sessionToken: {
-            name: 'session_token',
-            options: {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none',
-                path: '/',
-                domain: '.webbriks.com',
-            },
-        },
-    },
-    session: {
-        expiresIn: 60 * 60 * 10,
-        updateAge: 60 * 60 * 2,
-
-        freshAge: 60 * 15,
-    },
 });
