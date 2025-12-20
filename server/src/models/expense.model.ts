@@ -1,0 +1,56 @@
+import { model, Schema } from 'mongoose';
+import type { IExpense } from '../types/expense.type.js';
+
+const expenseSchema = new Schema<IExpense>(
+    {
+        date: {
+            type: Date,
+            required: true,
+            index: true,
+        },
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        categoryId: {
+            type: Schema.Types.ObjectId,
+            ref: 'ExpenseCategory',
+            required: true,
+            index: true,
+        },
+        branchId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Branch',
+            required: true,
+            index: true,
+        },
+        amount: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        status: {
+            type: String,
+            enum: ['pending', 'paid', 'partial_paid'],
+            default: 'pending',
+            index: true,
+        },
+        note: {
+            type: String,
+            trim: true,
+        },
+        createdBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+    },
+    { timestamps: true }
+);
+
+// Compound index for efficient date range queries
+expenseSchema.index({ date: -1, branchId: 1 });
+
+const ExpenseModel = model<IExpense>('Expense', expenseSchema);
+export default ExpenseModel;

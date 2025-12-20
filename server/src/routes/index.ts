@@ -10,6 +10,7 @@ import { dashboardRoute } from './dashboard.route.js';
 import { invitationRoute } from './invitation.route.js';
 import { analyticsRoute } from './analytics.route.js';
 import { notificationRoute } from './notification.route.js';
+import { expenseRoute } from './expense.route.js';
 
 const router: Router = Router();
 
@@ -57,6 +58,10 @@ const moduleRoutes = [
     {
         path: '/notifications',
         route: notificationRoute,
+    },
+    {
+        path: '/expenses',
+        route: expenseRoute,
     },
 ];
 

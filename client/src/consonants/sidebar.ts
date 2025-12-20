@@ -7,6 +7,7 @@ import {
     IconClock,
     IconMail,
     IconCalendarStats,
+    IconReceipt,
 } from '@tabler/icons-react';
 
 export const sidebarData = [
@@ -26,21 +27,19 @@ export const sidebarData = [
         title: 'Invitations',
         url: '/invitations',
         icon: IconMail,
-        access: [
-            Role.SUPER_ADMIN,
-            Role.ADMIN,
-            Role.HR_MANAGER,
-        ],
+        access: [Role.SUPER_ADMIN, Role.ADMIN, Role.HR_MANAGER],
     },
     {
         title: 'Attendance',
         url: '/attendance',
         icon: IconCalendarStats,
-        access: [
-            Role.SUPER_ADMIN,
-            Role.ADMIN,
-            Role.HR_MANAGER,
-        ],
+        access: [Role.SUPER_ADMIN, Role.ADMIN, Role.HR_MANAGER],
+    },
+    {
+        title: 'Expense',
+        url: '/expense',
+        icon: IconReceipt,
+        access: [Role.SUPER_ADMIN, Role.ADMIN, Role.HR_MANAGER],
     },
     {
         title: 'Shifting',
