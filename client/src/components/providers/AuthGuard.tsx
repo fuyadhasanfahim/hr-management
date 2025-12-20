@@ -17,42 +17,20 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
 
+    const isPublicRoute =
+        publicRoutes.has(pathname) || pathname.startsWith('/sign-up');
+
     useEffect(() => {
-        if (isPending) return;
+        if (isPending || !session) return;
 
-        // Allow next static / assets automatically
-        if (
-            pathname.startsWith('/_next') ||
-            pathname.startsWith('/api') ||
-            pathname === '/favicon.ico' ||
-            pathname === '/robots.txt' ||
-            pathname.startsWith('/assets')
-        ) {
-            return;
+        // 🔐 Role based access - only check for authenticated users on protected routes
+        if (!isPublicRoute) {
+            const role = session.user?.role as Role | undefined;
+            if (role && !canAccess(role, pathname)) {
+                router.replace('/dashboard');
+            }
         }
-
-        const isPublic =
-            publicRoutes.has(pathname) || pathname.startsWith('/sign-up');
-
-        // ❌ Not logged in
-        if (!session) {
-            if (isPublic) return;
-            router.replace('/sign-in');
-            return;
-        }
-
-        // ✅ Logged in user on public route → dashboard
-        if (isPublic || pathname === '/') {
-            router.replace('/dashboard');
-            return;
-        }
-
-        // 🔐 Role based access
-        const role = session.user?.role as Role | undefined;
-        if (role && !canAccess(role, pathname)) {
-            router.replace('/dashboard');
-        }
-    }, [session, isPending, pathname, router]);
+    }, [session, isPending, pathname, router, isPublicRoute]);
 
     // ⏳ Loading state
     if (isPending) {
@@ -63,8 +41,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // 🚫 Block rendering while redirecting
-    if (!session && !publicRoutes.has(pathname)) {
+    // 🚫 Block rendering for unauthenticated users on protected routes
+    // (Middleware handles the redirect, this just prevents flash of content)
+    if (!session && !isPublicRoute) {
         return null;
     }
 

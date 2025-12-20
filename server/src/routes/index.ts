@@ -9,7 +9,7 @@ import OvertimeRoutes from './overtime.route.js';
 import { dashboardRoute } from './dashboard.route.js';
 import { invitationRoute } from './invitation.route.js';
 import { analyticsRoute } from './analytics.route.js';
-
+import { notificationRoute } from './notification.route.js';
 
 const router: Router = Router();
 
@@ -53,6 +53,10 @@ const moduleRoutes = [
     {
         path: '/analytics',
         route: analyticsRoute,
+    },
+    {
+        path: '/notifications',
+        route: notificationRoute,
     },
 ];
 

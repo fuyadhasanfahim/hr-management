@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Pie, PieChart, Cell, Legend, ResponsiveContainer } from 'recharts';
+import { Pie, PieChart, Cell, Legend } from 'recharts';
 import type { AttendanceOverview } from '@/types/dashboard.type';
 
 interface AttendanceOverviewChartProps {
@@ -46,27 +46,25 @@ export function AttendanceOverviewChart({ data }: AttendanceOverviewChartProps) 
             </CardHeader>
             <CardContent>
                 <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Pie
-                                data={chartData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={({ name, percent }) =>
-                                    `${name}: ${(percent * 100).toFixed(0)}%`
-                                }
-                                outerRadius={80}
-                                dataKey="value"
-                            >
-                                {chartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                            </Pie>
-                            <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
+                    <PieChart>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Pie
+                            data={chartData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) =>
+                                `${name}: ${(percent * 100).toFixed(0)}%`
+                            }
+                            outerRadius={80}
+                            dataKey="value"
+                        >
+                            {chartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                            ))}
+                        </Pie>
+                        <Legend />
+                    </PieChart>
                 </ChartContainer>
             </CardContent>
         </Card>

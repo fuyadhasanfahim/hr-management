@@ -30,6 +30,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         width={200}
                                         height={60}
                                         loading="eager"
+                                        style={{ width: 'auto', height: 'auto' }}
                                     />
                                 </figure>
                             </Link>
