@@ -10,7 +10,7 @@ const publicRoutes = new Set([
 const skipRoutes = ['/_next', '/api', '/favicon.ico', '/robots.txt', '/assets'];
 
 // Cookie name with prefix (matches backend's advanced.cookiePrefix: 'hr')
-const SESSION_COOKIE_NAME = 'hr.session_token';
+const SESSION_COOKIE_NAME = '__Secure-better-auth.session_token';
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
