@@ -1,4 +1,3 @@
-import { getSessionCookie } from 'better-auth/cookies';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -10,6 +9,9 @@ const publicRoutes = new Set([
 
 const skipRoutes = ['/_next', '/api', '/favicon.ico', '/robots.txt', '/assets'];
 
+// Cookie name with prefix (matches backend's advanced.cookiePrefix: 'hr')
+const SESSION_COOKIE_NAME = 'hr.session_token';
+
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
@@ -17,11 +19,12 @@ export function proxy(request: NextRequest) {
         return NextResponse.next();
     }
 
-    const sessionCookie = getSessionCookie(request);
+    // Read session cookie directly
+    const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
     const isPublicRoute =
         publicRoutes.has(pathname) || pathname.startsWith('/sign-up');
 
-    if (!sessionCookie) {
+    if (!sessionCookie?.value) {
         if (isPublicRoute) {
             return NextResponse.next();
         }
@@ -36,7 +39,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: [
-        '/((?!_next/static|_next/image|favicon.ico).*)',
-    ],
+    matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
