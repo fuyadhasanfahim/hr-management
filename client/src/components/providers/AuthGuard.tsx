@@ -21,10 +21,20 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         publicRoutes.has(pathname) || pathname.startsWith('/sign-up');
 
     useEffect(() => {
-        if (isPending || !session) return;
+        // Redirect unauthenticated users to sign-in
+        if (!isPending && !session && !isPublicRoute) {
+            router.replace('/sign-in');
+            return;
+        }
 
-        // 🔐 Role based access - only check for authenticated users on protected routes
-        if (!isPublicRoute) {
+        // Redirect authenticated users away from public routes
+        if (!isPending && session && (isPublicRoute || pathname === '/')) {
+            router.replace('/dashboard');
+            return;
+        }
+
+        // Role based access - only check for authenticated users on protected routes
+        if (!isPending && session && !isPublicRoute) {
             const role = session.user?.role as Role | undefined;
             if (role && !canAccess(role, pathname)) {
                 router.replace('/dashboard');
@@ -32,7 +42,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         }
     }, [session, isPending, pathname, router, isPublicRoute]);
 
-    // ⏳ Loading state
+    // Loading state
     if (isPending) {
         return (
             <div className="flex h-screen items-center justify-center">
@@ -41,9 +51,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // 🚫 Block rendering for unauthenticated users on protected routes
-    // (Middleware handles the redirect, this just prevents flash of content)
+    // Block rendering for unauthenticated users on protected routes
     if (!session && !isPublicRoute) {
+        return null;
+    }
+
+    // Block rendering for authenticated users on public routes (prevents flash)
+    if (session && isPublicRoute) {
         return null;
     }
 
