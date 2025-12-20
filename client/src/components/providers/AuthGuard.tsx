@@ -12,37 +12,53 @@ const publicRoutes = new Set([
     '/reset-password',
 ]);
 
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
+export default function AuthGuard({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
     const { data: session, isPending } = useSession();
     const pathname = usePathname();
     const router = useRouter();
 
-    const isPublicRoute =
-        publicRoutes.has(pathname) || pathname.startsWith('/sign-up');
-
     useEffect(() => {
-        // Redirect unauthenticated users to sign-in
-        if (!isPending && !session && !isPublicRoute) {
+        if (isPending) return;
+
+        // Allow next static / assets automatically
+        if (
+            pathname.startsWith('/_next') ||
+            pathname.startsWith('/api') ||
+            pathname === '/favicon.ico' ||
+            pathname === '/robots.txt' ||
+            pathname.startsWith('/assets')
+        ) {
+            return;
+        }
+
+        const isPublic =
+            publicRoutes.has(pathname) || pathname.startsWith('/sign-up');
+
+        // ❌ Not logged in
+        if (!session) {
+            if (isPublic) return;
             router.replace('/sign-in');
             return;
         }
 
-        // Redirect authenticated users away from public routes
-        if (!isPending && session && (isPublicRoute || pathname === '/')) {
+        // ✅ Logged in user on public route → dashboard
+        if (isPublic || pathname === '/') {
             router.replace('/dashboard');
             return;
         }
 
-        // Role based access - only check for authenticated users on protected routes
-        if (!isPending && session && !isPublicRoute) {
-            const role = session.user?.role as Role | undefined;
-            if (role && !canAccess(role, pathname)) {
-                router.replace('/dashboard');
-            }
+        // 🔐 Role based access
+        const role = session.user?.role as Role | undefined;
+        if (role && !canAccess(role, pathname)) {
+            router.replace('/dashboard');
         }
-    }, [session, isPending, pathname, router, isPublicRoute]);
+    }, [session, isPending, pathname, router]);
 
-    // Loading state
+    // ⏳ Loading state
     if (isPending) {
         return (
             <div className="flex h-screen items-center justify-center">
@@ -51,13 +67,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // Block rendering for unauthenticated users on protected routes
-    if (!session && !isPublicRoute) {
-        return null;
-    }
-
-    // Block rendering for authenticated users on public routes (prevents flash)
-    if (session && isPublicRoute) {
+    // 🚫 Block rendering while redirecting
+    if (!session && !publicRoutes.has(pathname)) {
         return null;
     }
 
