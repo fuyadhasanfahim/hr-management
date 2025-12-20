@@ -9,8 +9,6 @@ const { db_name, better_auth_secret, trusted_origins } = envConfig;
 const mongoClient = await client();
 const db = mongoClient.db(db_name);
 
-const isProduction = process.env.NODE_ENV === 'production';
-
 export const auth = betterAuth({
     secret: better_auth_secret,
     database: mongodbAdapter(db, {
@@ -68,14 +66,4 @@ export const auth = betterAuth({
         },
     },
     trustedOrigins: trusted_origins.split(','),
-    advanced: {
-        cookiePrefix: 'hr',
-        useSecureCookies: isProduction,
-    },
-    session: {
-        cookieCache: {
-            enabled: true,
-            maxAge: 60 * 5, // 5 minutes
-        },
-    },
 });
