@@ -18,6 +18,11 @@ export const apiSlice = createApi({
         'Invitation',
         'Expense',
         'ExpenseCategory',
+        'Client',
+        'Order',
+        'Service',
+        'ReturnFileFormat',
+        'Earning',
     ],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     endpoints: (_builder) => ({}),

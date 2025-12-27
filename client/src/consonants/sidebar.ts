@@ -8,6 +8,8 @@ import {
     IconMail,
     IconCalendarStats,
     IconReceipt,
+    IconUsers,
+    IconPackage,
 } from '@tabler/icons-react';
 
 export const sidebarData = [
@@ -40,6 +42,29 @@ export const sidebarData = [
         url: '/expense',
         icon: IconReceipt,
         access: [Role.SUPER_ADMIN, Role.ADMIN, Role.HR_MANAGER],
+    },
+    {
+        title: 'Clients',
+        url: '/clients',
+        icon: IconUsers,
+        access: [Role.SUPER_ADMIN, Role.ADMIN, Role.HR_MANAGER],
+    },
+    {
+        title: 'Orders',
+        url: '/orders',
+        icon: IconPackage,
+        access: [
+            Role.SUPER_ADMIN,
+            Role.ADMIN,
+            Role.HR_MANAGER,
+            Role.TEAM_LEADER,
+        ],
+    },
+    {
+        title: 'Earnings',
+        url: '/earnings',
+        icon: IconReceipt,
+        access: [Role.SUPER_ADMIN, Role.ADMIN],
     },
     {
         title: 'Shifting',

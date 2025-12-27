@@ -11,6 +11,11 @@ import { invitationRoute } from './invitation.route.js';
 import { analyticsRoute } from './analytics.route.js';
 import { notificationRoute } from './notification.route.js';
 import { expenseRoute } from './expense.route.js';
+import { clientRoute } from './client.route.js';
+import { orderRoute } from './order.route.js';
+import { serviceRoute } from './service.route.js';
+import { returnFileFormatRoute } from './return-file-format.route.js';
+import { earningRoute } from './earning.route.js';
 
 const router: Router = Router();
 
@@ -62,6 +67,26 @@ const moduleRoutes = [
     {
         path: '/expenses',
         route: expenseRoute,
+    },
+    {
+        path: '/clients',
+        route: clientRoute,
+    },
+    {
+        path: '/orders',
+        route: orderRoute,
+    },
+    {
+        path: '/services',
+        route: serviceRoute,
+    },
+    {
+        path: '/return-file-formats',
+        route: returnFileFormatRoute,
+    },
+    {
+        path: '/earnings',
+        route: earningRoute,
     },
 ];
 
