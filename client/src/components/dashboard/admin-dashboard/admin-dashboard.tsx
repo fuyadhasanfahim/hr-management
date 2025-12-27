@@ -6,9 +6,10 @@ import { AttendanceOverviewChart } from './attendance-overview-chart';
 import { OvertimeSummaryTable } from './overtime-summary-table';
 import { RecentActivities } from './recent-activities';
 import { AdminDashboardSkeleton } from './admin-dashboard-skeleton';
-import { Users, UserCheck, Clock, TrendingUp } from 'lucide-react';
+import { Users, UserCheck, Clock, TrendingUp, DollarSign, Receipt, Wallet, ArrowUpRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AdminDashboard() {
     const { data, isLoading, error, refetch } = useGetAdminDashboardQuery(undefined, {
@@ -36,10 +37,55 @@ export default function AdminDashboard() {
         return null;
     }
 
-    const { staffStats, attendanceOverview, monthlyAttendanceStats, overtimeSummary, recentActivities } = data;
+    const { staffStats, attendanceOverview, monthlyAttendanceStats, overtimeSummary, recentActivities, financialStats } = data;
+
+    const formatCurrency = (amount: number) => {
+        return `৳${amount.toLocaleString('en-BD', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    };
 
     return (
         <div className="space-y-6">
+            {/* Financial Overview */}
+            {financialStats && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Financial Overview</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <StatCard
+                                title="Total Earnings"
+                                value={formatCurrency(financialStats.totalEarnings)}
+                                icon={DollarSign}
+                                description={`This month: ${formatCurrency(financialStats.thisMonthEarnings)}`}
+                                variant="success"
+                            />
+                            <StatCard
+                                title="Total Expenses"
+                                value={formatCurrency(financialStats.totalExpenses)}
+                                icon={Receipt}
+                                description={`This month: ${formatCurrency(financialStats.thisMonthExpenses)}`}
+                                variant="warning"
+                            />
+                            <StatCard
+                                title="Profit"
+                                value={formatCurrency(financialStats.profit)}
+                                icon={TrendingUp}
+                                description="Earnings - Expenses"
+                                variant={financialStats.profit >= 0 ? 'primary' : 'warning'}
+                            />
+                            <StatCard
+                                title="Unpaid Revenue"
+                                value={formatCurrency(financialStats.unpaidRevenue)}
+                                icon={Wallet}
+                                description="Not yet withdrawn"
+                                variant="default"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatCard
@@ -103,3 +149,4 @@ export default function AdminDashboard() {
         </div>
     );
 }
+

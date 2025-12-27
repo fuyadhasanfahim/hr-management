@@ -2,6 +2,9 @@ import { startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import StaffModel from '../models/staff.model.js';
 import AttendanceDayModel from '../models/attendance-day.model.js';
 import OvertimeModel from '../models/overtime.model.js';
+import EarningModel from '../models/earning.model.js';
+import ExpenseModel from '../models/expense.model.js';
+import OrderModel from '../models/order.model.js';
 import { client } from '../lib/db.js';
 import { Role } from '../consonants/role.js';
 import envConfig from '../config/env.config.js';
@@ -12,38 +15,42 @@ import type {
     IMonthlyAttendanceStats,
     IOvertimeSummary,
     IRecentActivity,
+    IFinancialStats,
 } from '../types/dashboard.type.js';
 
 const getStaffStats = async (): Promise<IStaffStats> => {
     // Get database instance
     const mongoClient = await client();
     const db = mongoClient.db(envConfig.db_name);
-    
+
     // Find only staff and team_leader users (exclude admins)
-    const staffUsers = await db.collection('user').find({
-        role: { $in: [Role.STAFF, Role.TEAM_LEADER] }
-    }).toArray();
-    
+    const staffUsers = await db
+        .collection('user')
+        .find({
+            role: { $in: [Role.STAFF, Role.TEAM_LEADER] },
+        })
+        .toArray();
+
     const staffUserIds = staffUsers.map((u: any) => u._id);
-    
+
     // Count only staff records for actual staff users
     const total = await StaffModel.countDocuments({
-        userId: { $in: staffUserIds }
+        userId: { $in: staffUserIds },
     });
-    
+
     const active = await StaffModel.countDocuments({
         userId: { $in: staffUserIds },
-        status: 'active'
+        status: 'active',
     });
-    
+
     const inactive = total - active;
 
     // Get staff count by department (only for actual staff)
     const byDepartment = await StaffModel.aggregate([
         {
             $match: {
-                userId: { $in: staffUserIds }
-            }
+                userId: { $in: staffUserIds },
+            },
         },
         {
             $group: {
@@ -87,11 +94,13 @@ const getTodayAttendanceOverview = async (): Promise<IAttendanceOverview> => {
     const present = attendanceRecords.filter(
         (r) => r.status === 'present' || r.status === 'late'
     ).length;
-    const absent = attendanceRecords.filter((r) => r.status === 'absent')
-        .length;
+    const absent = attendanceRecords.filter(
+        (r) => r.status === 'absent'
+    ).length;
     const late = attendanceRecords.filter((r) => r.status === 'late').length;
-    const onLeave = attendanceRecords.filter((r) => r.status === 'on_leave')
-        .length;
+    const onLeave = attendanceRecords.filter(
+        (r) => r.status === 'on_leave'
+    ).length;
 
     const presentPercentage = total > 0 ? (present / total) * 100 : 0;
 
@@ -148,13 +157,16 @@ const getOvertimeSummary = async (): Promise<IOvertimeSummary> => {
     const overtimeRecords = await OvertimeModel.find();
 
     const total = overtimeRecords.length;
-    const pending = overtimeRecords.filter((r) => r.status === 'pending')
-        .length;
-    const approved = overtimeRecords.filter((r) => r.status === 'approved')
-        .length;
-    const rejected = overtimeRecords.filter((r) => r.status === 'rejected')
-        .length;
-    
+    const pending = overtimeRecords.filter(
+        (r) => r.status === 'pending'
+    ).length;
+    const approved = overtimeRecords.filter(
+        (r) => r.status === 'approved'
+    ).length;
+    const rejected = overtimeRecords.filter(
+        (r) => r.status === 'rejected'
+    ).length;
+
     // Completed is not a valid status in IOvertime, so we'll count approved as completed
     const completed = approved;
 
@@ -240,6 +252,91 @@ const getRecentActivities = async (): Promise<IRecentActivity[]> => {
     }
 };
 
+const getFinancialStats = async (): Promise<IFinancialStats> => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const startOfMonthDate = startOfMonth(now);
+    const endOfMonthDate = endOfMonth(now);
+
+    // Get all order IDs that have been included in earnings
+    const paidOrderIds = await EarningModel.distinct('orderIds');
+
+    const [
+        earningsTotal,
+        earningsThisMonth,
+        expensesTotal,
+        expensesThisMonth,
+        deliveredRevenueResult,
+        unpaidOrdersResult,
+    ] = await Promise.all([
+        // Total earnings (all time, BDT)
+        EarningModel.aggregate([
+            { $match: { status: 'completed' } },
+            { $group: { _id: null, total: { $sum: '$amountInBDT' } } },
+        ]),
+        // This month earnings (BDT)
+        EarningModel.aggregate([
+            {
+                $match: {
+                    status: 'completed',
+                    month: currentMonth,
+                    year: currentYear,
+                },
+            },
+            { $group: { _id: null, total: { $sum: '$amountInBDT' } } },
+        ]),
+        // Total expenses (all time)
+        ExpenseModel.aggregate([
+            { $group: { _id: null, total: { $sum: '$amount' } } },
+        ]),
+        // This month expenses
+        ExpenseModel.aggregate([
+            {
+                $match: {
+                    date: { $gte: startOfMonthDate, $lte: endOfMonthDate },
+                },
+            },
+            { $group: { _id: null, total: { $sum: '$amount' } } },
+        ]),
+        // Total revenue from ALL delivered orders (for display)
+        OrderModel.aggregate([
+            { $match: { status: 'delivered' } },
+            { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+        ]),
+        // Revenue from delivered orders NOT yet in earnings (unpaid)
+        OrderModel.aggregate([
+            {
+                $match: {
+                    status: 'delivered',
+                    _id: { $nin: paidOrderIds },
+                },
+            },
+            { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+        ]),
+    ]);
+
+    const totalEarnings = earningsTotal[0]?.total || 0;
+    const thisMonthEarnings = earningsThisMonth[0]?.total || 0;
+    const totalExpenses = expensesTotal[0]?.total || 0;
+    const thisMonthExpenses = expensesThisMonth[0]?.total || 0;
+    // Revenue is in USD (assuming), multiply by approximate rate for BDT display
+    const totalRevenue = (deliveredRevenueResult[0]?.total || 0) * 120;
+    // Unpaid = orders delivered but not yet withdrawn
+    const unpaidRevenue = (unpaidOrdersResult[0]?.total || 0) * 120;
+    const profit = totalEarnings - totalExpenses;
+
+    return {
+        totalEarnings: Math.round(totalEarnings * 100) / 100,
+        thisMonthEarnings: Math.round(thisMonthEarnings * 100) / 100,
+        totalExpenses: Math.round(totalExpenses * 100) / 100,
+        thisMonthExpenses: Math.round(thisMonthExpenses * 100) / 100,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        unpaidRevenue: Math.round(unpaidRevenue * 100) / 100,
+        profit: Math.round(profit * 100) / 100,
+    };
+};
+
 const getAdminDashboardStats = async (): Promise<IDashboardStats> => {
     const [
         staffStats,
@@ -247,12 +344,14 @@ const getAdminDashboardStats = async (): Promise<IDashboardStats> => {
         monthlyAttendanceStats,
         overtimeSummary,
         recentActivities,
+        financialStats,
     ] = await Promise.all([
         getStaffStats(),
         getTodayAttendanceOverview(),
         getMonthlyAttendanceStats(),
         getOvertimeSummary(),
         getRecentActivities(),
+        getFinancialStats(),
     ]);
 
     return {
@@ -261,6 +360,7 @@ const getAdminDashboardStats = async (): Promise<IDashboardStats> => {
         monthlyAttendanceStats,
         overtimeSummary,
         recentActivities,
+        financialStats,
     };
 };
 
@@ -271,4 +371,5 @@ export default {
     getMonthlyAttendanceStats,
     getOvertimeSummary,
     getRecentActivities,
+    getFinancialStats,
 };

@@ -53,10 +53,21 @@ export interface IRecentActivity {
     timestamp: Date;
 }
 
+export interface IFinancialStats {
+    totalEarnings: number;
+    thisMonthEarnings: number;
+    totalExpenses: number;
+    thisMonthExpenses: number;
+    totalRevenue: number;
+    unpaidRevenue: number;
+    profit: number;
+}
+
 export interface IDashboardStats {
     staffStats: IStaffStats;
     attendanceOverview: IAttendanceOverview;
     monthlyAttendanceStats: IMonthlyAttendanceStats;
     overtimeSummary: IOvertimeSummary;
     recentActivities: IRecentActivity[];
+    financialStats?: IFinancialStats;
 }
