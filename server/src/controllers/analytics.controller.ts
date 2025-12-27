@@ -1,53 +1,33 @@
 import type { Request, Response } from 'express';
-import AnalyticsService from '../services/analytics.service.js';
-import AuditService from '../services/audit.service.js';
-import StaffService from '../services/staff.service.js';
+import analyticsService from '../services/analytics.service.js';
 
-async function getDashboardAnalytics(_req: Request, res: Response) {
+async function getFinanceAnalytics(req: Request, res: Response) {
     try {
-        const analytics = await AnalyticsService.getDashboardAnalytics();
-        return res.json({ success: true, data: analytics });
-    } catch (err) {
-        return res.status(500).json({ success: false, message: (err as Error).message });
-    }
-}
+        const year = req.query.year
+            ? parseInt(req.query.year as string)
+            : undefined;
+        const months = req.query.months
+            ? parseInt(req.query.months as string)
+            : 12;
 
-async function getSalaryHistory(req: Request, res: Response) {
-    try {
-        const { staffId } = req.params;
-        
-        if (!staffId) {
-            return res.status(400).json({ success: false, message: 'Staff ID is required' });
-        }
-        
-        const history = await StaffService.getSalaryHistory(staffId);
-        return res.json({ success: true, data: history });
-    } catch (err) {
-        return res.status(500).json({ success: false, message: (err as Error).message });
-    }
-}
+        const analytics = await analyticsService.getFinanceAnalytics({
+            year,
+            months,
+        });
 
-async function getAuditLogs(req: Request, res: Response) {
-    try {
-        const { userId, action, entity, startDate, endDate, limit } = req.query;
-        
-        const filters: any = {};
-        if (userId) filters.userId = userId;
-        if (action) filters.action = action;
-        if (entity) filters.entity = entity;
-        if (startDate) filters.startDate = new Date(startDate as string);
-        if (endDate) filters.endDate = new Date(endDate as string);
-        if (limit) filters.limit = Number(limit);
-        
-        const logs = await AuditService.getLogs(filters);
-        return res.json({ success: true, data: logs });
-    } catch (err) {
-        return res.status(500).json({ success: false, message: (err as Error).message });
+        res.status(200).json({
+            success: true,
+            data: analytics,
+        });
+    } catch (error) {
+        console.error('Error getting finance analytics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch finance analytics',
+        });
     }
 }
 
 export default {
-    getDashboardAnalytics,
-    getSalaryHistory,
-    getAuditLogs,
+    getFinanceAnalytics,
 };
