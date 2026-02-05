@@ -6,22 +6,12 @@ dotenv.config();
 const MONGO_URI = process.env.MONGO_URI || '';
 
 const monthMap: { [key: string]: number } = {
-    january: 1,
-    february: 2,
-    march: 3,
-    april: 4,
-    may: 5,
-    june: 6,
-    july: 7,
-    august: 8,
     september: 9,
     october: 10,
 };
 
-async function rebuildAll() {
-    console.log(
-        'Starting COMPLETE Rebuild of Migrated Earnings Jan-Oct 2025...',
-    );
+async function cleanAndMigrate() {
+    console.log('Starting cleanup and re-migration for Sep/Oct 2025...');
     try {
         await mongoose.connect(MONGO_URI);
         const client = mongoose.connection.getClient();
@@ -31,48 +21,46 @@ async function rebuildAll() {
         if (!targetDb) throw new Error('Target DB not found');
         const targetColl = targetDb.collection('earnings');
 
-        // 1. DELETE ALL 2025 migrated records (Jan-Oct)
-        // Ideally we only delete 1-10 months, in case Nov/Dec has real data.
-        console.log('Deleting all earnings for Jan-Oct 2025...');
+        // 1. DELETE ALL Sep/Oct 2025 records
+        console.log(
+            'Deleting ALL earnings for Sep (9) and Oct (10) 2025 in target...',
+        );
         const deleteResult = await targetColl.deleteMany({
             year: 2025,
-            month: { $in: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+            month: { $in: [9, 10] },
         });
         console.log(`Deleted ${deleteResult.deletedCount} records.`);
 
-        // 2. Fetch Source
+        // 2. Fetch from Source
         const sourceDb = client.db('hrManagement');
         const sourceColl = sourceDb.collection('earningsList');
 
-        console.log('Fetching legacy records...');
+        console.log('Fetching legacy records for Sep/Oct 2025...');
+        // Match string names roughly
         const legacyDocs = await sourceColl
             .find({
+                // Regex for case insensitive month names
+                month: { $regex: /september|october/i },
                 date: { $regex: /2025/ },
             })
             .toArray();
 
-        // Case insensitve map
-        const mapLower: { [key: string]: number } = {};
-        for (const [k, v] of Object.entries(monthMap)) {
-            mapLower[k.toLowerCase()] = v;
-        }
+        console.log(`Found ${legacyDocs.length} source records.`);
 
+        // 3. Transform and Insert
         const toInsert: any[] = [];
+        let skipped = 0;
 
         for (const doc of legacyDocs) {
             const m = (doc.month as string).toLowerCase().trim();
-            const monthNum = mapLower[m]; // Only matches Jan-Oct keys
+            const monthNum = monthMap[m];
 
             if (!monthNum) {
-                // Could be Nov/Dec or invalid
-                // If it is Nov/Dec we skip as per instructions "october porjonto"
+                console.warn(
+                    `Skipping doc ${doc._id} with unknown month '${m}'`,
+                );
+                skipped++;
                 continue;
-            }
-
-            // Status handling: copy "Paid"/"Unpaid" -> "paid"/"unpaid"
-            let status = 'paid';
-            if (doc.status) {
-                status = doc.status.toLowerCase();
             }
 
             const newDoc = {
@@ -88,11 +76,11 @@ async function rebuildAll() {
                 conversionRate: doc.convertRate || 1,
                 netAmount: doc.totalUsd || 0,
                 amountInBDT: doc.convertedBdt || 0,
-                status: status, // Correctly mapped status
-                paidAt: status === 'paid' ? new Date() : undefined, // Check if paid
+                status: 'paid',
+                paidAt: new Date(), // Using now
                 isLegacy: true,
                 legacyClientCode: doc.clientId,
-                notes: `Migrated from legacy (Full Rebuild): ${doc._id}`,
+                notes: `Migrated from legacy (Sep/Oct fix): ${doc._id}`,
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 createdBy: new Types.ObjectId('000000000000000000000000'),
@@ -101,12 +89,32 @@ async function rebuildAll() {
             toInsert.push(newDoc);
         }
 
-        console.log(`Prepared ${toInsert.length} documents for insertion.`);
+        console.log(
+            `Prepared ${toInsert.length} documents for insertion. Skipped: ${skipped}`,
+        );
 
         if (toInsert.length > 0) {
             const result = await targetColl.insertMany(toInsert);
             console.log(`Inserted ${result.insertedCount} documents.`);
         }
+
+        // 4. Verify Totals immediately
+        const newStats = await targetColl
+            .aggregate([
+                { $match: { year: 2025, month: { $in: [9, 10] } } },
+                {
+                    $group: {
+                        _id: '$month',
+                        totalBDT: { $sum: '$amountInBDT' },
+                        totalUSD: { $sum: '$totalAmount' },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ])
+            .toArray();
+
+        console.log('--- New Totals ---');
+        console.log(newStats);
 
         await mongoose.disconnect();
     } catch (e) {
@@ -114,4 +122,4 @@ async function rebuildAll() {
     }
 }
 
-rebuildAll();
+cleanAndMigrate();
