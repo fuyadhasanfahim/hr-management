@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useGetAllOvertimeQuery } from "@/redux/features/overtime/overtimeApi";
-import type { IOvertime } from "@/types/overtime.type";
+import { useGetExpensesQuery } from "@/redux/features/expense/expenseApi";
+import type { Expense } from "@/redux/features/expense/expenseApi";
 import {
     Table,
     TableBody,
@@ -22,16 +22,15 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    Clock,
+    Banknote,
     ChevronLeft,
     ChevronRight,
     CheckCircle2,
-    XCircle,
-    TimerOff,
+    Clock,
 } from "lucide-react";
 import { format } from "date-fns";
 
-export function StaffOvertimeTab({ staffId }: { staffId: string }) {
+export function PaymentHistoryTab({ staffId }: { staffId: string }) {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
 
@@ -39,30 +38,32 @@ export function StaffOvertimeTab({ staffId }: { staffId: string }) {
         data: response,
         isLoading,
         isFetching,
-    } = useGetAllOvertimeQuery({
+    } = useGetExpensesQuery({
         staffId,
         page,
         limit,
+        sortOrder: "desc",
+        sortBy: "date",
     });
 
-    const overtimes = response?.data?.records || [];
-    const pagination = response?.data?.pagination;
+    const payments = response?.expenses || [];
+    const pagination = response?.pagination;
 
     const getStatusStyles = (status: string) => {
         switch (status) {
-            case "approved":
+            case "paid":
                 return {
                     variant: "default" as const,
                     icon: CheckCircle2,
                     className:
                         "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 border-emerald-200",
                 };
-            case "rejected":
+            case "partial_paid":
                 return {
-                    variant: "destructive" as const,
-                    icon: XCircle,
+                    variant: "secondary" as const,
+                    icon: Clock,
                     className:
-                        "bg-red-500/15 text-red-700 hover:bg-red-500/25 border-red-200",
+                        "bg-blue-500/15 text-blue-700 hover:bg-blue-500/25 border-blue-200",
                 };
             case "pending":
                 return {
@@ -92,15 +93,16 @@ export function StaffOvertimeTab({ staffId }: { staffId: string }) {
         );
     }
 
-    if (overtimes.length === 0) {
+    if (payments.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/30 rounded-lg border border-dashed mt-4">
-                <TimerOff className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
+                <Banknote className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
                 <h3 className="text-lg font-medium text-foreground">
-                    No Overtime Recorded
+                    No Payment History Found
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-sm mt-1">
-                    This staff member has not recorded any overtime hours.
+                    This staff member doesn&apos;t have any recorded salary or
+                    overtime payments yet.
                 </p>
             </div>
         );
@@ -113,55 +115,60 @@ export function StaffOvertimeTab({ staffId }: { staffId: string }) {
                     <TableHeader className="bg-muted/50">
                         <TableRow>
                             <TableHead className="w-[150px]">Date</TableHead>
-                            <TableHead>Start Time</TableHead>
-                            <TableHead>End Time</TableHead>
-                            <TableHead>Duration</TableHead>
+                            <TableHead>Category / Title</TableHead>
+                            <TableHead>Method</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
                             <TableHead className="text-right">Status</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {overtimes.map((ot: IOvertime) => {
+                        {payments.map((payment: Expense) => {
                             const {
                                 variant,
                                 icon: Icon,
                                 className,
-                            } = getStatusStyles(ot.status);
+                            } = getStatusStyles(payment.status);
+
+                            // Format amount nicely (e.g., ৳ 1,000)
+                            const formattedAmount = new Intl.NumberFormat(
+                                "bn-BD",
+                                {
+                                    style: "currency",
+                                    currency: "BDT",
+                                    minimumFractionDigits: 0,
+                                },
+                            ).format(payment.amount);
+
                             return (
                                 <TableRow
-                                    key={ot._id}
+                                    key={payment._id}
                                     className="hover:bg-muted/50 transition-colors"
                                 >
                                     <TableCell className="font-medium whitespace-nowrap">
                                         {format(
-                                            new Date(ot.date),
+                                            new Date(payment.date),
                                             "MMM dd, yyyy",
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-muted-foreground">
-                                        {ot.startTime
-                                            ? format(
-                                                  new Date(ot.startTime),
-                                                  "hh:mm aa",
-                                              )
-                                            : "-"}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">
-                                        {ot.endTime
-                                            ? format(
-                                                  new Date(ot.endTime),
-                                                  "hh:mm aa",
-                                              )
-                                            : "-"}
-                                    </TableCell>
                                     <TableCell>
-                                        <Badge
-                                            variant="outline"
-                                            className="font-medium font-mono text-xs bg-muted/40"
-                                        >
-                                            {ot.durationMinutes
-                                                ? `${Math.floor(ot.durationMinutes / 60)}h ${ot.durationMinutes % 60}m`
-                                                : "-"}
-                                        </Badge>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-foreground">
+                                                {payment.category?.name ||
+                                                    "Uncategorized"}
+                                            </span>
+                                            <span
+                                                className="text-xs text-muted-foreground truncate max-w-[250px]"
+                                                title={payment.title}
+                                            >
+                                                {payment.title}
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="capitalize text-muted-foreground">
+                                        {payment.paymentMethod || "Cash"}
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold">
+                                        {formattedAmount}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Badge
@@ -170,7 +177,10 @@ export function StaffOvertimeTab({ staffId }: { staffId: string }) {
                                         >
                                             <Icon className="h-3.5 w-3.5" />
                                             <span className="capitalize">
-                                                {ot.status}
+                                                {payment.status.replace(
+                                                    "_",
+                                                    " ",
+                                                )}
                                             </span>
                                         </Badge>
                                     </TableCell>
