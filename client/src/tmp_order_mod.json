@@ -19,7 +19,6 @@ import type {
     OrderStatus,
     OrderPriority,
     OrderFilters,
-    UpdateStatusInput,
 } from "@/types/order.type";
 import { ORDER_STATUS_LABELS, ORDER_PRIORITY_LABELS } from "@/types/order.type";
 import {
@@ -96,6 +95,13 @@ import { toast } from "sonner";
 import { OrderForm, type OrderFormData } from "@/components/order/OrderForm";
 import { DeadlineCountdown } from "@/components/order/DeadlineCountdown";
 import { OrderTimeline } from "@/components/order/OrderTimeline";
+import { columns } from "./components/columns";
+import { EditDialog } from "./components/EditDialog";
+import { ViewDialog } from "./components/ViewDialog";
+import { ExtendDeadlineDialog } from "./components/ExtendDeadlineDialog";
+import { RevisionInstructionDialog } from "./components/RevisionInstructionDialog";
+import { OrderTimelineDialog } from "./components/OrderTimelineDialog";
+import { EmailDialog } from "./EmailDialog";
 import { EmailDialog } from "./EmailDialog";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -199,47 +205,6 @@ export default function OrdersPage() {
     const [revisionInstruction, setRevisionInstruction] = useState("");
     const [statusChangeNote, setStatusChangeNote] = useState("");
 
-    // Email dialog state
-    const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-    const [emailPendingOrder, setEmailPendingOrder] = useState<IOrder | null>(
-        null,
-    );
-    const [emailPendingStatus, setEmailPendingStatus] =
-        useState<OrderStatus | null>(null);
-    const [isEmailSending, setIsEmailSending] = useState(false);
-
-    const confirmEmailAndStatusChange = async (
-        message: string,
-        downloadLink?: string,
-    ) => {
-        if (!emailPendingOrder || !emailPendingStatus) return;
-        setIsEmailSending(true);
-        try {
-            await updateOrderStatus({
-                id: emailPendingOrder._id,
-                data: {
-                    status: emailPendingStatus,
-                    customEmailMessage: message,
-                    downloadLink,
-                    sendEmail: true,
-                } as UpdateStatusInput,
-            }).unwrap();
-            toast.success(
-                `Status updated to ${ORDER_STATUS_LABELS[emailPendingStatus]} and email sent!`,
-            );
-            setIsEmailDialogOpen(false);
-            setEmailPendingOrder(null);
-            setEmailPendingStatus(null);
-        } catch (error: unknown) {
-            const err = error as ApiErrorResponse;
-            toast.error(
-                err?.data?.message || "Failed to update status & send email",
-            );
-        } finally {
-            setIsEmailSending(false);
-        }
-    };
-
     // Date filter state
     const [selectedMonth, setSelectedMonth] = useState<string>("");
     const [selectedYear, setSelectedYear] = useState<string>("");
@@ -300,10 +265,15 @@ export default function OrdersPage() {
     const [triggerGetAll, { isLoading: isLoadingAll }] =
         useLazyGetOrdersQuery();
 
-    const orders = useMemo(() => orderData?.data || [], [orderData]);
+    const orders = orderData?.data || [];
     const meta = orderData?.meta;
     const stats = statsData?.data;
-    const clients = useMemo(() => clientsData?.clients || [], [clientsData]);
+    const clients = clientsData?.clients || [];
+
+    // Get selected orders from IDs
+    const selectedOrders = useMemo(() => {
+        return orders.filter((order) => selectedOrderIds.has(order._id));
+    }, [orders, selectedOrderIds]);
 
     // Check if all current page orders are selected
     const allOrdersSelected = useMemo(() => {
@@ -480,7 +450,7 @@ export default function OrdersPage() {
 
         // Feature: send emails on specific status changes
         if (["cancelled", "completed", "delivered"].includes(newStatus)) {
-            const orderObj = orderData?.data.find((o) => o._id === orderId);
+            const orderObj = data?.data.find((o) => o._id === orderId);
             if (orderObj) {
                 setEmailPendingStatus(newStatus);
                 setEmailPendingOrder(orderObj);
@@ -2028,16 +1998,6 @@ export default function OrdersPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            {/* Email Notification Dialog */}
-            <EmailDialog
-                open={isEmailDialogOpen}
-                onOpenChange={setIsEmailDialogOpen}
-                order={emailPendingOrder}
-                status={emailPendingStatus as OrderStatus}
-                onSend={confirmEmailAndStatusChange}
-                isLoading={isEmailSending}
-            />
         </div>
     );
 }
