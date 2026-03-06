@@ -14,13 +14,24 @@ import {
 // @ts-ignore
 import * as React from 'react';
 
-interface PinResetEmailProps {
-    staffName: string;
-    resetUrl: string;
+interface InvitationEmailProps {
+    designation: string;
+    department: string;
+    salary: number;
+    signupUrl: string;
+    isReminder?: boolean;
 }
 
-export const PinResetEmail = ({ staffName, resetUrl }: PinResetEmailProps) => {
-    const previewText = `Reset your Salary PIN`;
+export const InvitationEmail = ({
+    designation,
+    department,
+    salary,
+    signupUrl,
+    isReminder = false,
+}: InvitationEmailProps) => {
+    const previewText = isReminder
+        ? `Reminder: Complete your registration for ${designation}`
+        : `You're invited to join Web Briks as ${designation}`;
     const logoUrl =
         'https://res.cloudinary.com/dny7zfbg9/image/upload/v1755954483/mqontecf1xao7znsh6cx.png';
 
@@ -41,23 +52,47 @@ export const PinResetEmail = ({ staffName, resetUrl }: PinResetEmailProps) => {
                     </Section>
 
                     <Section style={content}>
-                        <Text style={heading}>Reset Salary PIN</Text>
-
-                        <Text style={paragraph}>
-                            Hello {staffName},<br />
-                            You have requested to reset your Salary PIN. Click
-                            the button below to set a new PIN.
+                        <Text style={heading}>
+                            {isReminder
+                                ? 'Registration Reminder'
+                                : 'Welcome to the Team!'}
                         </Text>
 
+                        <Text style={paragraph}>
+                            {isReminder
+                                ? `This is a friendly reminder to complete your registration for the ${designation} position.`
+                                : `We are excited to invite you to join our organization as a ${designation}.`}
+                        </Text>
+
+                        <Section style={infoCard}>
+                            <Text style={infoHeading}>Position Details:</Text>
+                            <Section style={infoItems}>
+                                <Text style={infoItem}>
+                                    <strong>Designation:</strong> {designation}
+                                </Text>
+                                <Text style={infoItem}>
+                                    <strong>Department:</strong>{' '}
+                                    {department || 'N/A'}
+                                </Text>
+                                <Text style={infoItem}>
+                                    <strong>Salary:</strong> ৳
+                                    {salary.toLocaleString()}
+                                </Text>
+                            </Section>
+                        </Section>
+
                         <Section style={btnContainer}>
-                            <Button style={button} href={resetUrl}>
-                                Reset PIN
+                            <Button style={button} href={signupUrl}>
+                                {isReminder
+                                    ? 'Complete Registration'
+                                    : 'Accept Invitation'}
                             </Button>
                         </Section>
 
                         <Text style={paragraph}>
-                            If you didn't request this, you can safely ignore
-                            this email. The link will expire in 1 hour.
+                            This registration link will expire in 48 hours. If
+                            you have any questions, please contact our HR
+                            department.
                         </Text>
 
                         <Hr style={hr} />
@@ -65,7 +100,7 @@ export const PinResetEmail = ({ staffName, resetUrl }: PinResetEmailProps) => {
                         <Text style={footerText}>
                             Best regards,
                             <br />
-                            <strong>HR Team, Web Briks LLC</strong>
+                            <strong>HR Department, Web Briks LLC</strong>
                         </Text>
                     </Section>
 
@@ -87,7 +122,7 @@ export const PinResetEmail = ({ staffName, resetUrl }: PinResetEmailProps) => {
     );
 };
 
-export default PinResetEmail;
+export default InvitationEmail;
 
 const main = {
     backgroundColor: '#f2f2f7',
@@ -132,6 +167,34 @@ const paragraph = {
     lineHeight: '26px',
     color: '#3a3a3c',
     marginBottom: '24px',
+};
+
+const infoCard = {
+    backgroundColor: '#f8f9fa',
+    padding: '24px',
+    borderRadius: '16px',
+    marginBottom: '32px',
+    border: '1px solid #e5e5ea',
+};
+
+const infoHeading = {
+    fontSize: '15px',
+    fontWeight: '600',
+    color: '#8e8e93',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    marginBottom: '16px',
+    marginTop: '0',
+};
+
+const infoItems = {
+    margin: '0',
+};
+
+const infoItem = {
+    fontSize: '16px',
+    color: '#1c1c1e',
+    margin: '0 0 12px 0',
 };
 
 const btnContainer = {

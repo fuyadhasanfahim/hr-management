@@ -9,27 +9,34 @@ import {
     Text,
     Img,
     Link,
-    Button,
 } from '@react-email/components';
 // @ts-ignore
 import * as React from 'react';
 
-interface OrderExportEmailProps {
+interface OrderStatusUpdateEmailProps {
     clientName: string;
-    month: string;
-    year: string;
-    invoiceUrl?: string;
+    orderName: string;
+    status: string;
+    message: string;
 }
 
-export const OrderExportEmail = ({
+export const OrderStatusUpdateEmail = ({
     clientName,
-    month,
-    year,
-    invoiceUrl,
-}: OrderExportEmailProps) => {
-    const previewText = `Invoice for ${month} ${year}`;
+    orderName,
+    status,
+    message,
+}: OrderStatusUpdateEmailProps) => {
+    const previewText = `Order Update: ${orderName} (${status})`;
     const logoUrl =
         'https://res.cloudinary.com/dny7zfbg9/image/upload/v1755954483/mqontecf1xao7znsh6cx.png';
+
+    // Format newlines in message for HTML
+    const formattedMessage = message.split('\n').map((line, i) => (
+        <React.Fragment key={i}>
+            {line}
+            <br />
+        </React.Fragment>
+    ));
 
     return (
         <Html>
@@ -37,7 +44,6 @@ export const OrderExportEmail = ({
             <Preview>{previewText}</Preview>
             <Body style={main}>
                 <Container style={container}>
-                    {/* Header with Logo */}
                     <Section style={header}>
                         <Img
                             src={logoUrl}
@@ -48,35 +54,26 @@ export const OrderExportEmail = ({
                         />
                     </Section>
 
-                    {/* Main Card Content */}
                     <Section style={content}>
-                        <Text style={heading}>Invoice Ready</Text>
+                        <Text style={heading}>Order Status Update</Text>
 
                         <Text style={paragraph}>
                             Hi {clientName},<br />
-                            Your invoice for{' '}
-                            <strong>
-                                {month} {year}
-                            </strong>{' '}
-                            is ready and attached to this email.
+                            There is an update on your order{' '}
+                            <strong>{orderName}</strong>.
                         </Text>
 
-                        {/* Download/Action Button */}
-                        <Section style={btnContainer}>
-                            <Button
-                                style={button}
-                                href={
-                                    invoiceUrl || 'http://localhost:3000/orders'
-                                }
-                            >
-                                Download Invoice
-                            </Button>
+                        <Section style={statusCard}>
+                            <Text style={statusLabel}>New Status</Text>
+                            <Text style={statusValue}>
+                                {status.replace('_', ' ').toUpperCase()}
+                            </Text>
                         </Section>
 
-                        <Text style={paragraph}>
-                            If you have any questions or need adjustments, just
-                            reply to this email. We're here to help!
-                        </Text>
+                        <Section style={messageSection}>
+                            <Text style={messageHeading}>Update Details:</Text>
+                            <Text style={messageBody}>{formattedMessage}</Text>
+                        </Section>
 
                         <Hr style={hr} />
 
@@ -87,7 +84,6 @@ export const OrderExportEmail = ({
                         </Text>
                     </Section>
 
-                    {/* Footer Info */}
                     <Section style={footer}>
                         <Text style={footerLegal}>
                             1209 Mountain Road PL NE, STE R, Albuquerque, NM
@@ -106,12 +102,12 @@ export const OrderExportEmail = ({
     );
 };
 
-export default OrderExportEmail;
+export default OrderStatusUpdateEmail;
 
-// Styles inspired by iOS design
 const main = {
-    backgroundColor: '#f2f2f7', // iOS system gray 6
-    fontFamily: 'Inter, sans-serif',
+    backgroundColor: '#f2f2f7',
+    fontFamily:
+        'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     padding: '40px 0',
 };
 
@@ -119,8 +115,8 @@ const container = {
     backgroundColor: '#ffffff',
     margin: '0 auto',
     padding: '40px',
-    borderRadius: '24px', // Rounded corners like iOS cards
-    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04)', // Soft, diffuse shadow
+    borderRadius: '24px',
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04)',
     maxWidth: '600px',
 };
 
@@ -132,7 +128,6 @@ const logo = {
     display: 'block',
     height: '56px',
     width: 'auto',
-    // Logo is naturally left-aligned in the section
 };
 
 const content = {
@@ -142,38 +137,68 @@ const content = {
 const heading = {
     fontSize: '24px',
     fontWeight: '700',
-    color: '#1c1c1e', // iOS label color
+    color: '#1c1c1e',
     marginBottom: '24px',
     letterSpacing: '-0.5px',
 };
 
 const paragraph = {
-    fontSize: '17px', // iOS body size
+    fontSize: '17px',
     lineHeight: '26px',
-    color: '#3a3a3c', // iOS secondary label color
+    color: '#3a3a3c',
     marginBottom: '24px',
 };
 
-const btnContainer = {
+const statusCard = {
+    backgroundColor: '#009999',
+    padding: '20px',
+    borderRadius: '16px',
+    marginBottom: '32px',
     textAlign: 'center' as const,
+};
+
+const statusLabel = {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '1px',
+    margin: '0 0 4px 0',
+};
+
+const statusValue = {
+    fontSize: '20px',
+    fontWeight: '800',
+    color: '#ffffff',
+    margin: '0',
+    letterSpacing: '0.5px',
+};
+
+const messageSection = {
     marginBottom: '32px',
 };
 
-const button = {
-    backgroundColor: '#009999', // Teal Accent
-    borderRadius: '9999px', // Pill shape
-    color: '#ffffff',
-    fontSize: '17px',
+const messageHeading = {
+    fontSize: '15px',
     fontWeight: '600',
-    textDecoration: 'none',
-    textAlign: 'center' as const,
-    display: 'inline-block',
-    padding: '14px 32px',
-    boxShadow: '0 4px 12px rgba(0, 153, 153, 0.25)', // Colored shadow for the button
+    color: '#8e8e93',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    marginBottom: '12px',
+};
+
+const messageBody = {
+    fontSize: '16px',
+    lineHeight: '26px',
+    color: '#3a3a3c',
+    backgroundColor: '#f8f9fa',
+    padding: '16px',
+    borderRadius: '12px',
+    border: '1px solid #e5e5ea',
 };
 
 const hr = {
-    borderColor: '#e5e5ea', // iOS separator color
+    borderColor: '#e5e5ea',
     margin: '32px 0 24px',
 };
 
@@ -190,7 +215,7 @@ const footer = {
 
 const footerLegal = {
     fontSize: '13px',
-    color: '#8e8e93', // iOS tertiary label
+    color: '#8e8e93',
     marginBottom: '8px',
 };
 

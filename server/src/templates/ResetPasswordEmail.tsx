@@ -14,20 +14,16 @@ import {
 // @ts-ignore
 import * as React from 'react';
 
-interface OrderExportEmailProps {
-    clientName: string;
-    month: string;
-    year: string;
-    invoiceUrl?: string;
+interface ResetPasswordEmailProps {
+    userName: string;
+    resetPasswordUrl: string;
 }
 
-export const OrderExportEmail = ({
-    clientName,
-    month,
-    year,
-    invoiceUrl,
-}: OrderExportEmailProps) => {
-    const previewText = `Invoice for ${month} ${year}`;
+export const ResetPasswordEmail = ({
+    userName,
+    resetPasswordUrl,
+}: ResetPasswordEmailProps) => {
+    const previewText = `Reset your password`;
     const logoUrl =
         'https://res.cloudinary.com/dny7zfbg9/image/upload/v1755954483/mqontecf1xao7znsh6cx.png';
 
@@ -37,7 +33,6 @@ export const OrderExportEmail = ({
             <Preview>{previewText}</Preview>
             <Body style={main}>
                 <Container style={container}>
-                    {/* Header with Logo */}
                     <Section style={header}>
                         <Img
                             src={logoUrl}
@@ -48,34 +43,25 @@ export const OrderExportEmail = ({
                         />
                     </Section>
 
-                    {/* Main Card Content */}
                     <Section style={content}>
-                        <Text style={heading}>Invoice Ready</Text>
+                        <Text style={heading}>Reset Your Password</Text>
 
                         <Text style={paragraph}>
-                            Hi {clientName},<br />
-                            Your invoice for{' '}
-                            <strong>
-                                {month} {year}
-                            </strong>{' '}
-                            is ready and attached to this email.
+                            Hi {userName},<br />
+                            We received a request to reset your password. If you
+                            didn't make this request, you can safely ignore this
+                            email.
                         </Text>
 
-                        {/* Download/Action Button */}
                         <Section style={btnContainer}>
-                            <Button
-                                style={button}
-                                href={
-                                    invoiceUrl || 'http://localhost:3000/orders'
-                                }
-                            >
-                                Download Invoice
+                            <Button style={button} href={resetPasswordUrl}>
+                                Reset Password
                             </Button>
                         </Section>
 
                         <Text style={paragraph}>
-                            If you have any questions or need adjustments, just
-                            reply to this email. We're here to help!
+                            The link will expire in 1 hour. For security
+                            reasons, please do not share this link with anyone.
                         </Text>
 
                         <Hr style={hr} />
@@ -87,7 +73,6 @@ export const OrderExportEmail = ({
                         </Text>
                     </Section>
 
-                    {/* Footer Info */}
                     <Section style={footer}>
                         <Text style={footerLegal}>
                             1209 Mountain Road PL NE, STE R, Albuquerque, NM
@@ -106,12 +91,12 @@ export const OrderExportEmail = ({
     );
 };
 
-export default OrderExportEmail;
+export default ResetPasswordEmail;
 
-// Styles inspired by iOS design
 const main = {
-    backgroundColor: '#f2f2f7', // iOS system gray 6
-    fontFamily: 'Inter, sans-serif',
+    backgroundColor: '#f2f2f7',
+    fontFamily:
+        'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     padding: '40px 0',
 };
 
@@ -119,8 +104,8 @@ const container = {
     backgroundColor: '#ffffff',
     margin: '0 auto',
     padding: '40px',
-    borderRadius: '24px', // Rounded corners like iOS cards
-    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04)', // Soft, diffuse shadow
+    borderRadius: '24px',
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04)',
     maxWidth: '600px',
 };
 
@@ -132,7 +117,6 @@ const logo = {
     display: 'block',
     height: '56px',
     width: 'auto',
-    // Logo is naturally left-aligned in the section
 };
 
 const content = {
@@ -142,15 +126,15 @@ const content = {
 const heading = {
     fontSize: '24px',
     fontWeight: '700',
-    color: '#1c1c1e', // iOS label color
+    color: '#1c1c1e',
     marginBottom: '24px',
     letterSpacing: '-0.5px',
 };
 
 const paragraph = {
-    fontSize: '17px', // iOS body size
+    fontSize: '17px',
     lineHeight: '26px',
-    color: '#3a3a3c', // iOS secondary label color
+    color: '#3a3a3c',
     marginBottom: '24px',
 };
 
@@ -160,8 +144,8 @@ const btnContainer = {
 };
 
 const button = {
-    backgroundColor: '#009999', // Teal Accent
-    borderRadius: '9999px', // Pill shape
+    backgroundColor: '#009999',
+    borderRadius: '9999px',
     color: '#ffffff',
     fontSize: '17px',
     fontWeight: '600',
@@ -169,11 +153,11 @@ const button = {
     textAlign: 'center' as const,
     display: 'inline-block',
     padding: '14px 32px',
-    boxShadow: '0 4px 12px rgba(0, 153, 153, 0.25)', // Colored shadow for the button
+    boxShadow: '0 4px 12px rgba(0, 153, 153, 0.25)',
 };
 
 const hr = {
-    borderColor: '#e5e5ea', // iOS separator color
+    borderColor: '#e5e5ea',
     margin: '32px 0 24px',
 };
 
@@ -190,7 +174,7 @@ const footer = {
 
 const footerLegal = {
     fontSize: '13px',
-    color: '#8e8e93', // iOS tertiary label
+    color: '#8e8e93',
     marginBottom: '8px',
 };
 
