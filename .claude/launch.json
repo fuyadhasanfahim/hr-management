@@ -6,6 +6,12 @@
             "runtimeExecutable": "npm",
             "runtimeArgs": ["--prefix", "client", "run", "dev"],
             "port": 3000
+        },
+        {
+            "name": "payment",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["--prefix", "payment", "run", "dev"],
+            "port": 3002
         }
     ]
 }
